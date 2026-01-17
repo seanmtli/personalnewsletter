@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletter - Sports Digest{% endblock %}
+
+{% block content %}
+<div class="px-4">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Newsletter #{{ newsletter.id }}</h1>
+            <p class="text-gray-500 text-sm">
+                Generated {{ newsletter.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                using {{ newsletter.provider_used }}
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            {% if not newsletter.sent_at %}
+            <button onclick="sendNewsletter({{ newsletter.id }})"
+                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                Send to Email
+            </button>
+            {% else %}
+            <span class="text-green-600 px-4 py-2">
+                Sent {{ newsletter.sent_at.strftime('%b %d, %Y') }}
+            </span>
+            {% endif %}
+            <a href="/newsletter/archive" class="text-gray-600 hover:text-gray-800 px-4 py-2">
+                Back to Archive
+            </a>
+        </div>
+    </div>
+
+    {% if newsletter.interests_used %}
+    <div class="mb-6">
+        <span class="text-sm text-gray-500">Interests searched:</span>
+        <div class="flex flex-wrap gap-2 mt-1">
+            {% for interest in newsletter.interests_used %}
+            <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+                {{ interest }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Newsletter Content -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        {% if newsletter.content_json and newsletter.content_json.items %}
+        <div class="space-y-6">
+            {% for item in newsletter.content_json.items %}
+            <article class="border-b pb-6 last:border-0 last:pb-0">
+                <div class="flex gap-4">
+                    {% if item.thumbnail_url %}
+                    <div class="flex-shrink-0">
+                        <img src="{{ item.thumbnail_url }}" alt=""
+                            class="w-24 h-24 object-cover rounded">
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                            <a href="{{ item.url }}" target="_blank" rel="noopener"
+                                class="hover:text-indigo-600">
+                                {{ item.headline }}
+                            </a>
+                        </h3>
+                        <p class="text-gray-600 mb-2">{{ item.summary }}</p>
+                        <div class="flex items-center text-sm text-gray-500 space-x-3">
+                            <span class="inline-flex items-center">
+                                {% if item.source_type == 'article' %}📰
+                                {% elif item.source_type == 'tweet' %}🐦
+                                {% elif item.source_type == 'video' %}🎬
+                                {% elif item.source_type == 'reddit' %}💬
+                                {% endif %}
+                                {{ item.source_name }}
+                            </span>
+                            {% if item.published_at %}
+                            <span>{{ item.published_at[:10] if item.published_at is string else item.published_at }}</span>
+                            {% endif %}
+                        </div>
+                        {% if item.relevance %}
+                        <p class="text-sm text-indigo-600 mt-2">{{ item.relevance }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Fallback to raw HTML content -->
+        <div class="newsletter-content">
+            {{ newsletter.content | safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function sendNewsletter(id) {
+    if (!confirm('Send this newsletter to your email?')) return;
+
+    try {
+        const response = await fetch('/newsletter/send/' + id, {
+            method: 'POST',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Newsletter sent to ' + data.email);
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.detail || 'Failed to send'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

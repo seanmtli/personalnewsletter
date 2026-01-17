@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sports Digest{% endblock %}
+
+{% block content %}
+<div class="px-4">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- Interests Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Your Interests</h2>
+                <a href="/preferences" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                    Edit
+                </a>
+            </div>
+
+            {% if preferences %}
+            <div class="flex flex-wrap gap-2">
+                {% for pref in preferences %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
+                    {% if pref.interest_data and pref.interest_data.logo_url %}
+                    <img src="{{ pref.interest_data.logo_url }}" alt="" class="w-4 h-4 mr-1 rounded">
+                    {% endif %}
+                    {{ pref.interest_name }}
+                </span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">
+                No interests added yet.
+                <a href="/preferences" class="text-indigo-600 hover:text-indigo-800">Add some now</a>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Generate Newsletter Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold mb-4">Generate Newsletter</h2>
+
+            {% if preferences %}
+            <p class="text-gray-600 mb-4">
+                Generate a new digest based on your {{ preferences|length }} interest(s).
+            </p>
+            <button id="generate-btn" onclick="generateNewsletter()"
+                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                Generate Now
+            </button>
+            <div id="generate-status" class="mt-3 hidden">
+                <div class="flex items-center text-gray-600">
+                    <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Generating newsletter...
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">
+                Add some interests first to generate your newsletter.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Newsletters -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Recent Newsletters</h2>
+            <a href="/newsletter/archive" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                View all
+            </a>
+        </div>
+
+        {% if recent_newsletters %}
+        <div class="space-y-3">
+            {% for newsletter in recent_newsletters %}
+            <div class="flex justify-between items-center py-2 border-b last:border-0">
+                <div>
+                    <a href="/newsletter/view/{{ newsletter.id }}" class="text-gray-900 hover:text-indigo-600">
+                        Newsletter #{{ newsletter.id }}
+                    </a>
+                    <span class="text-gray-500 text-sm ml-2">
+                        {{ newsletter.created_at.strftime('%b %d, %Y') }}
+                    </span>
+                    <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 ml-2">
+                        {{ newsletter.provider_used }}
+                    </span>
+                </div>
+                <div class="flex space-x-2">
+                    {% if not newsletter.sent_at %}
+                    <button onclick="sendNewsletter({{ newsletter.id }})"
+                        class="text-sm text-indigo-600 hover:text-indigo-800">
+                        Send
+                    </button>
+                    {% else %}
+                    <span class="text-sm text-green-600">Sent</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">No newsletters generated yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function generateNewsletter() {
+    const btn = document.getElementById('generate-btn');
+    const status = document.getElementById('generate-status');
+
+    btn.disabled = true;
+    btn.classList.add('opacity-50');
+    status.classList.remove('hidden');
+
+    try {
+        const response = await fetch('/newsletter/generate', {
+            method: 'POST',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            window.location.href = '/newsletter/view/' + data.newsletter_id;
+        } else {
+            alert('Error: ' + (data.detail || 'Failed to generate newsletter'));
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+            status.classList.add('hidden');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        status.classList.add('hidden');
+    }
+}
+
+async function sendNewsletter(id) {
+    if (!confirm('Send this newsletter to your email?')) return;
+
+    try {
+        const response = await fetch('/newsletter/send/' + id, {
+            method: 'POST',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Newsletter sent to ' + data.email);
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.detail || 'Failed to send'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
