@@ -58,49 +58,49 @@
             <!-- Football Tab -->
             <div id="tab-football" class="tab-content">
                 <h3 class="text-md font-semibold text-gray-700 mb-3">NFL Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="nfl-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nfl-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NFL Athletes</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="nfl-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nfl-athletes"></div>
             </div>
 
             <!-- Basketball Tab -->
             <div id="tab-basketball" class="tab-content hidden">
                 <h3 class="text-md font-semibold text-gray-700 mb-3">NBA Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="nba-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nba-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NBA Athletes</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="nba-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nba-athletes"></div>
             </div>
 
             <!-- Baseball Tab -->
             <div id="tab-baseball" class="tab-content hidden">
                 <h3 class="text-md font-semibold text-gray-700 mb-3">MLB Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="mlb-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="mlb-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Popular MLB Athletes</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="mlb-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="mlb-athletes"></div>
             </div>
 
             <!-- Hockey Tab -->
             <div id="tab-hockey" class="tab-content hidden">
                 <h3 class="text-md font-semibold text-gray-700 mb-3">NHL Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="nhl-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nhl-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NHL Athletes</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="nhl-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nhl-athletes"></div>
             </div>
 
             <!-- Soccer Tab -->
             <div id="tab-soccer" class="tab-content hidden">
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Premier League Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="premier-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="premier-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">MLS Teams</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-6" id="mls-teams"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="mls-teams"></div>
 
                 <h3 class="text-md font-semibold text-gray-700 mb-3">Popular Soccer Athletes</h3>
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="soccer-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="soccer-athletes"></div>
             </div>
         </div>
     </div>
@@ -137,21 +137,19 @@
 {% block scripts %}
 <script src="/static/js/picker.js"></script>
 <script>
-// Initialize with server data
-const teamsData = {{ teams_data | tojson | safe }};
-const athletesData = {{ athletes_data | tojson | safe }};
-
-// Track selected interests
-let selectedInterests = new Set();
-
-// Initialize existing preferences
-{% for pref in preferences %}
-selectedInterests.add("{{ pref.interest_name }}");
-{% endfor %}
-
 // Initialize the picker when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    initializePicker(teamsData, athletesData, selectedInterests);
+    // Pass server data to picker
+    const teams = {{ teams_data | tojson | safe }};
+    const athletes = {{ athletes_data | tojson | safe }};
+
+    // Build set of existing preferences
+    const existingInterests = new Set();
+    {% for pref in preferences %}
+    existingInterests.add("{{ pref.interest_name }}");
+    {% endfor %}
+
+    initializePicker(teams, athletes, existingInterests);
 });
 </script>
 {% endblock %}

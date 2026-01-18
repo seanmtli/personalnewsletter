@@ -46,19 +46,26 @@ function renderAthletes(sport, containerId) {
 function createCard(item, type) {
     const isSelected = selectedInterests.has(item.name);
     const selectedClass = isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'hover:bg-gray-50';
+    const imageUrl = item.logo_url || item.photo_url;
+    const subtitle = type === 'athlete' && item.team ? item.team : (item.league || '');
 
     return `
-        <div class="picker-card cursor-pointer rounded-lg border p-2 text-center transition-all ${selectedClass}"
+        <div class="picker-card cursor-pointer rounded-lg border p-3 text-center transition-all ${selectedClass}"
              onclick="toggleInterest('${escapeHtml(item.name)}', '${type}', ${JSON.stringify(item).replace(/"/g, '&quot;')})"
              data-name="${escapeHtml(item.name)}">
-            <div class="w-10 h-10 mx-auto mb-1 flex items-center justify-center">
-                ${item.logo_url || item.photo_url
-                    ? `<img src="${item.logo_url || item.photo_url}" alt="${escapeHtml(item.name)}" class="max-w-full max-h-full object-contain rounded">`
-                    : `<div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs">${item.name.charAt(0)}</div>`
+            <div class="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                ${imageUrl
+                    ? `<img src="${imageUrl}" alt="${escapeHtml(item.name)}"
+                           class="max-w-full max-h-full object-contain rounded"
+                           referrerpolicy="no-referrer"
+                           loading="lazy"
+                           onerror="this.parentElement.innerHTML='<div class=\\'w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg\\'>${item.name.charAt(0)}</div>'">`
+                    : `<div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg">${item.name.charAt(0)}</div>`
                 }
             </div>
-            <p class="text-xs text-gray-700 truncate">${escapeHtml(item.name)}</p>
-            ${isSelected ? '<span class="text-xs text-indigo-600">✓</span>' : ''}
+            <p class="text-sm font-medium text-gray-800 leading-tight">${escapeHtml(item.name)}</p>
+            ${subtitle ? `<p class="text-xs text-gray-500 mt-0.5">${escapeHtml(subtitle)}</p>` : ''}
+            ${isSelected ? '<span class="text-xs text-indigo-600 mt-1 inline-block">✓ Selected</span>' : ''}
         </div>
     `;
 }
@@ -118,7 +125,7 @@ function updateSelectedDisplay() {
         const chips = Array.from(selectedInterests).map(name => {
             const data = findInterestData(name);
             const logoHtml = data && (data.logo_url || data.photo_url)
-                ? `<img src="${data.logo_url || data.photo_url}" alt="" class="w-4 h-4 mr-1 rounded">`
+                ? `<img src="${data.logo_url || data.photo_url}" alt="" class="w-4 h-4 mr-1 rounded" referrerpolicy="no-referrer">`
                 : '';
 
             return `

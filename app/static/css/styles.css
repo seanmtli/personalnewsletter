@@ -3,10 +3,20 @@
 /* Picker card transitions */
 .picker-card {
     transition: all 0.15s ease;
+    min-height: 120px;
 }
 
 .picker-card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.picker-card img {
+    transition: transform 0.15s ease;
+}
+
+.picker-card:hover img {
+    transform: scale(1.05);
 }
 
 /* Interest chip animations */
@@ -64,10 +74,11 @@
 @media (max-width: 640px) {
     .picker-card {
         padding: 0.5rem;
+        min-height: 100px;
     }
 
-    .picker-card .w-10 {
-        width: 2rem;
-        height: 2rem;
+    .picker-card .w-16 {
+        width: 3rem;
+        height: 3rem;
     }
 }
