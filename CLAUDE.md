@@ -2,6 +2,10 @@
 
 AI-curated weekly sports newsletter using Claude with web search.
 
+## Development Workflow
+
+**Important**: Make commits frequently as you work on features. Push to GitHub regularly to keep the remote up to date. Group related changes into logical commits with descriptive messages.
+
 ## Quick Start
 
 ```bash
