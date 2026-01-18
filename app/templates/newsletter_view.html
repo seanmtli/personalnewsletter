@@ -44,9 +44,9 @@
 
     <!-- Newsletter Content -->
     <div class="bg-white rounded-lg shadow-sm p-6">
-        {% if newsletter.content_json and newsletter.content_json.items %}
+        {% if newsletter.content_json and newsletter.content_json.get('items') %}
         <div class="space-y-6">
-            {% for item in newsletter.content_json.items %}
+            {% for item in newsletter.content_json.get('items', []) %}
             <article class="border-b pb-6 last:border-0 last:pb-0">
                 <div class="flex gap-4">
                     {% if item.thumbnail_url %}

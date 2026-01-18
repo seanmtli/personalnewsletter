@@ -128,6 +128,17 @@ async def send_newsletter(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Check if email is configured
+    email_configured = (
+        (settings.resend_api_key and not settings.resend_api_key.startswith("re_your"))
+        or (settings.smtp_host and settings.smtp_user)
+    )
+    if not email_configured:
+        raise HTTPException(
+            status_code=400,
+            detail="Email not configured. Add RESEND_API_KEY or SMTP settings to .env file.",
+        )
+
     result = await db.execute(
         select(Newsletter).where(
             Newsletter.id == newsletter_id,
@@ -152,7 +163,7 @@ async def send_newsletter(
         await db.commit()
         return {"status": "sent", "email": current_user.email}
     else:
-        raise HTTPException(status_code=500, detail="Failed to send email")
+        raise HTTPException(status_code=500, detail="Failed to send email. Check your API key is valid.")
 
 
 @router.get("/api/list", response_model=list[NewsletterResponse])
