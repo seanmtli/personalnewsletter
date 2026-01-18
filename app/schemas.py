@@ -80,3 +80,15 @@ class NewsletterResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Simple signup schemas (no password required)
+class SimpleSignup(BaseModel):
+    email: EmailStr
+    preferences: list[PreferenceCreate]
+
+
+class SimpleSignupResponse(BaseModel):
+    message: str
+    email: str
+    preferences_count: int

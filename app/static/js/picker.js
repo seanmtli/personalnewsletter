@@ -111,29 +111,33 @@ function updateSelectedDisplay() {
     if (selectedInterests.size === 0) {
         container.innerHTML = '';
         noInterests.classList.remove('hidden');
-        return;
+    } else {
+        noInterests.classList.add('hidden');
+
+        // Get data for each interest
+        const chips = Array.from(selectedInterests).map(name => {
+            const data = findInterestData(name);
+            const logoHtml = data && (data.logo_url || data.photo_url)
+                ? `<img src="${data.logo_url || data.photo_url}" alt="" class="w-4 h-4 mr-1 rounded">`
+                : '';
+
+            return `
+                <span class="interest-chip inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800"
+                      data-name="${escapeHtml(name)}">
+                    ${logoHtml}
+                    ${escapeHtml(name)}
+                    <button onclick="removeInterest('${escapeHtml(name)}')" class="ml-2 text-indigo-600 hover:text-indigo-800">&times;</button>
+                </span>
+            `;
+        });
+
+        container.innerHTML = chips.join('');
     }
 
-    noInterests.classList.add('hidden');
-
-    // Get data for each interest
-    const chips = Array.from(selectedInterests).map(name => {
-        const data = findInterestData(name);
-        const logoHtml = data && (data.logo_url || data.photo_url)
-            ? `<img src="${data.logo_url || data.photo_url}" alt="" class="w-4 h-4 mr-1 rounded">`
-            : '';
-
-        return `
-            <span class="interest-chip inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800"
-                  data-name="${escapeHtml(name)}">
-                ${logoHtml}
-                ${escapeHtml(name)}
-                <button onclick="removeInterest('${escapeHtml(name)}')" class="ml-2 text-indigo-600 hover:text-indigo-800">&times;</button>
-            </span>
-        `;
-    });
-
-    container.innerHTML = chips.join('');
+    // Call localStorage hook for signup flow if available
+    if (typeof saveInterestsToStorage === 'function' && typeof teamsData !== 'undefined') {
+        saveInterestsToStorage(Array.from(selectedInterests), teamsData, athletesData);
+    }
 }
 
 function findInterestData(name) {

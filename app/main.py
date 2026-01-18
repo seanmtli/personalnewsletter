@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routers import auth, preferences, newsletter
+from app.routers import auth, preferences, newsletter, signup
 from app.routers.auth import get_current_user, get_db
 from app.config import get_settings
 
@@ -37,6 +37,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(auth.router)
 app.include_router(preferences.router)
 app.include_router(newsletter.router)
+app.include_router(signup.router)
 
 
 @app.get("/", response_class=HTMLResponse)
