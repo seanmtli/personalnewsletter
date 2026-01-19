@@ -1,29 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Newsletter - Sports Digest{% endblock %}
+{% block title %}Newsletter - SportsPulse{% endblock %}
 
 {% block content %}
-<div class="px-4">
-    <div class="flex justify-between items-center mb-6">
+<div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Newsletter #{{ newsletter.id }}</h1>
-            <p class="text-gray-500 text-sm">
+            <h1 class="text-2xl font-bold">Newsletter #{{ newsletter.id }}</h1>
+            <p class="text-muted text-sm mt-1">
                 Generated {{ newsletter.created_at.strftime('%B %d, %Y at %I:%M %p') }}
-                using {{ newsletter.provider_used }}
+                <span class="badge-neutral ml-2">{{ newsletter.provider_used }}</span>
             </p>
         </div>
-        <div class="flex space-x-3">
+        <div class="flex gap-3">
             {% if not newsletter.sent_at %}
-            <button onclick="sendNewsletter({{ newsletter.id }})"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            <button onclick="sendNewsletter({{ newsletter.id }})" class="btn-primary">
                 Send to Email
             </button>
             {% else %}
-            <span class="text-green-600 px-4 py-2">
+            <span class="badge-success py-2 px-4">
                 Sent {{ newsletter.sent_at.strftime('%b %d, %Y') }}
             </span>
             {% endif %}
-            <a href="/newsletter/archive" class="text-gray-600 hover:text-gray-800 px-4 py-2">
+            <a href="/newsletter/archive" class="btn-ghost">
                 Back to Archive
             </a>
         </div>
@@ -31,10 +30,10 @@
 
     {% if newsletter.interests_used %}
     <div class="mb-6">
-        <span class="text-sm text-gray-500">Interests searched:</span>
-        <div class="flex flex-wrap gap-2 mt-1">
+        <span class="text-sm text-muted">Interests searched:</span>
+        <div class="flex flex-wrap gap-2 mt-2">
             {% for interest in newsletter.interests_used %}
-            <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+            <span class="chip-dark">
                 {{ interest }}
             </span>
             {% endfor %}
@@ -43,41 +42,41 @@
     {% endif %}
 
     <!-- Newsletter Content -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="card-dark p-6">
         {% if newsletter.content_json and newsletter.content_json.get('items') %}
-        <div class="space-y-6">
+        <div class="divide-y divide-white/5">
             {% for item in newsletter.content_json.get('items', []) %}
-            <article class="border-b pb-6 last:border-0 last:pb-0">
+            <article class="article-card">
                 <div class="flex gap-4">
                     {% if item.thumbnail_url %}
                     <div class="flex-shrink-0">
                         <img src="{{ item.thumbnail_url }}" alt=""
-                            class="w-24 h-24 object-cover rounded">
+                            class="w-24 h-24 object-cover rounded-lg">
                     </div>
                     {% endif %}
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                        <h3 class="text-lg font-semibold mb-2">
                             <a href="{{ item.url }}" target="_blank" rel="noopener"
-                                class="hover:text-indigo-600">
+                                class="article-title hover:text-orange-400 transition-colors">
                                 {{ item.headline }}
                             </a>
                         </h3>
-                        <p class="text-gray-600 mb-2">{{ item.summary }}</p>
-                        <div class="flex items-center text-sm text-gray-500 space-x-3">
+                        <p class="article-summary mb-3">{{ item.summary }}</p>
+                        <div class="flex items-center article-meta gap-4">
                             <span class="inline-flex items-center">
                                 {% if item.source_type == 'article' %}📰
                                 {% elif item.source_type == 'tweet' %}🐦
                                 {% elif item.source_type == 'video' %}🎬
                                 {% elif item.source_type == 'reddit' %}💬
                                 {% endif %}
-                                {{ item.source_name }}
+                                <span class="ml-1">{{ item.source_name }}</span>
                             </span>
                             {% if item.published_at %}
                             <span>{{ item.published_at[:10] if item.published_at is string else item.published_at }}</span>
                             {% endif %}
                         </div>
                         {% if item.relevance %}
-                        <p class="text-sm text-indigo-600 mt-2">{{ item.relevance }}</p>
+                        <p class="text-sm text-orange-400 mt-2">{{ item.relevance }}</p>
                         {% endif %}
                     </div>
                 </div>

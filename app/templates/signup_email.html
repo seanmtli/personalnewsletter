@@ -1,49 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Enter Your Email - Sports Digest{% endblock %}
+{% block title %}Enter Your Email - SportsPulse{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto px-4">
+<div class="max-w-md mx-auto">
     <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Almost There!</h1>
-        <p class="text-gray-600">Enter your email to receive your personalized sports newsletter.</p>
+        <h1 class="text-3xl font-bold mb-3">Almost There!</h1>
+        <p class="text-muted text-lg">Enter your email to receive your personalized sports newsletter.</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="card-dark p-6">
         <!-- Selected interests summary -->
-        <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
-            <p class="text-sm text-indigo-800">
-                <span class="font-semibold"><span id="interests-count">0</span> interests selected:</span>
-                <span id="interests-summary" class="text-indigo-600"></span>
+        <div class="info-box mb-6">
+            <p class="text-sm">
+                <span class="font-semibold text-orange-400"><span id="interests-count">0</span> interests selected:</span>
+                <span id="interests-summary" class="text-muted ml-1"></span>
             </p>
-            <a href="/signup" class="text-sm text-indigo-600 hover:text-indigo-800 underline">
+            <a href="/signup" class="text-sm link-orange underline mt-1 inline-block">
                 Change selections
             </a>
         </div>
 
         <form id="email-form">
             <div class="mb-4">
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                <label for="email" class="label-dark">
                     Email Address
                 </label>
                 <input type="email" id="email" name="email" required
                     placeholder="your@email.com"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="input-dark">
             </div>
 
-            <p class="text-sm text-gray-500 mb-4">
+            <p class="text-sm text-muted mb-6">
                 We'll send your weekly sports digest to this email. No spam, just sports news you care about.
             </p>
 
-            <button type="submit" id="submit-btn"
-                class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <button type="submit" id="submit-btn" class="btn-primary w-full py-3">
                 Sign Up
             </button>
         </form>
     </div>
 
-    <div class="mt-4 text-center">
-        <a href="/signup" class="text-gray-600 hover:text-gray-800">
+    <div class="mt-6 text-center">
+        <a href="/signup" class="text-muted hover:text-white transition-colors">
             &larr; Back to interest selection
         </a>
     </div>

@@ -1,73 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Newsletter Archive - Sports Digest{% endblock %}
+{% block title %}Newsletter Archive - SportsPulse{% endblock %}
 
 {% block content %}
-<div class="px-4">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Newsletter Archive</h1>
+<div>
+    <h1 class="text-3xl font-bold mb-8">Newsletter Archive</h1>
 
     {% if newsletters %}
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+    <div class="card-dark overflow-hidden">
+        <table class="table-dark">
+            <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Provider
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Interests
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                    </th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                    </th>
+                    <th>Date</th>
+                    <th>Provider</th>
+                    <th>Interests</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody>
                 {% for newsletter in newsletters %}
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td class="whitespace-nowrap">
                         {{ newsletter.created_at.strftime('%B %d, %Y at %I:%M %p') }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+                    <td>
+                        <span class="badge-neutral">
                             {{ newsletter.provider_used }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-500">
+                    <td class="text-muted">
                         {% if newsletter.interests_used %}
                             {{ newsletter.interests_used[:3] | join(', ') }}
                             {% if newsletter.interests_used | length > 3 %}
-                                <span class="text-gray-400">+{{ newsletter.interests_used | length - 3 }} more</span>
+                                <span class="text-white/40">+{{ newsletter.interests_used | length - 3 }} more</span>
                             {% endif %}
                         {% else %}
                             -
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td>
                         {% if newsletter.sent_at %}
-                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                        <span class="badge-success">
                             Sent {{ newsletter.sent_at.strftime('%b %d') }}
                         </span>
                         {% else %}
-                        <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+                        <span class="badge-warning">
                             Not sent
                         </span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <td class="text-right">
                         <a href="/newsletter/view/{{ newsletter.id }}"
-                            class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            class="link-orange mr-4">
                             View
                         </a>
                         {% if not newsletter.sent_at %}
                         <button onclick="sendNewsletter({{ newsletter.id }})"
-                            class="text-indigo-600 hover:text-indigo-900">
+                            class="link-orange">
                             Send
                         </button>
                         {% endif %}
@@ -78,9 +68,9 @@
         </table>
     </div>
     {% else %}
-    <div class="bg-white rounded-lg shadow-sm p-8 text-center">
-        <p class="text-gray-500 mb-4">No newsletters generated yet.</p>
-        <a href="/dashboard" class="text-indigo-600 hover:text-indigo-800">
+    <div class="card-dark p-8 text-center">
+        <p class="text-muted mb-4">No newsletters generated yet.</p>
+        <a href="/dashboard" class="link-orange">
             Go to dashboard to generate your first newsletter
         </a>
     </div>

@@ -1,46 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Pick Your Interests - Sports Digest{% endblock %}
+{% block title %}Pick Your Interests - SportsPulse{% endblock %}
 
 {% block content %}
-<div class="px-4">
-    <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Pick Your Teams & Athletes</h1>
-        <p class="text-gray-600">Select the teams and players you want to follow. We'll curate a weekly newsletter just for you.</p>
+<div>
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold mb-3">Pick Your Teams & Athletes</h1>
+        <p class="text-muted text-lg">Select the teams and players you want to follow. We'll curate a weekly newsletter just for you.</p>
     </div>
 
     <!-- Selected Interests -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div class="card-dark p-6 mb-6">
         <h2 class="text-lg font-semibold mb-3">Selected Interests</h2>
         <div id="selected-interests" class="flex flex-wrap gap-2 min-h-[40px]">
         </div>
-        <p id="no-interests" class="text-gray-500">
+        <p id="no-interests" class="text-muted">
             No interests selected. Pick some teams or athletes below!
         </p>
     </div>
 
     <!-- Sport Tabs -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div class="border-b">
-            <nav class="flex -mb-px" id="sport-tabs">
+    <div class="card-dark overflow-hidden">
+        <div class="border-b border-white/10">
+            <nav class="flex overflow-x-auto" id="sport-tabs">
                 <button onclick="switchTab('football')" data-tab="football"
-                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600">
+                    class="tab-btn active">
                     Football
                 </button>
                 <button onclick="switchTab('basketball')" data-tab="basketball"
-                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    class="tab-btn">
                     Basketball
                 </button>
                 <button onclick="switchTab('baseball')" data-tab="baseball"
-                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    class="tab-btn">
                     Baseball
                 </button>
                 <button onclick="switchTab('hockey')" data-tab="hockey"
-                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    class="tab-btn">
                     Hockey
                 </button>
                 <button onclick="switchTab('soccer')" data-tab="soccer"
-                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    class="tab-btn">
                     Soccer
                 </button>
             </nav>
@@ -50,77 +50,75 @@
         <div class="p-6">
             <!-- Football Tab -->
             <div id="tab-football" class="tab-content">
-                <h3 class="text-md font-semibold text-gray-700 mb-3">NFL Teams</h3>
+                <h3 class="section-header">NFL Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nfl-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NFL Athletes</h3>
+                <h3 class="section-header">Popular NFL Athletes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nfl-athletes"></div>
             </div>
 
             <!-- Basketball Tab -->
             <div id="tab-basketball" class="tab-content hidden">
-                <h3 class="text-md font-semibold text-gray-700 mb-3">NBA Teams</h3>
+                <h3 class="section-header">NBA Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nba-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NBA Athletes</h3>
+                <h3 class="section-header">Popular NBA Athletes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nba-athletes"></div>
             </div>
 
             <!-- Baseball Tab -->
             <div id="tab-baseball" class="tab-content hidden">
-                <h3 class="text-md font-semibold text-gray-700 mb-3">MLB Teams</h3>
+                <h3 class="section-header">MLB Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="mlb-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Popular MLB Athletes</h3>
+                <h3 class="section-header">Popular MLB Athletes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="mlb-athletes"></div>
             </div>
 
             <!-- Hockey Tab -->
             <div id="tab-hockey" class="tab-content hidden">
-                <h3 class="text-md font-semibold text-gray-700 mb-3">NHL Teams</h3>
+                <h3 class="section-header">NHL Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nhl-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Popular NHL Athletes</h3>
+                <h3 class="section-header">Popular NHL Athletes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nhl-athletes"></div>
             </div>
 
             <!-- Soccer Tab -->
             <div id="tab-soccer" class="tab-content hidden">
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Premier League Teams</h3>
+                <h3 class="section-header">Premier League Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="premier-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">MLS Teams</h3>
+                <h3 class="section-header">MLS Teams</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="mls-teams"></div>
 
-                <h3 class="text-md font-semibold text-gray-700 mb-3">Popular Soccer Athletes</h3>
+                <h3 class="section-header">Popular Soccer Athletes</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="soccer-athletes"></div>
             </div>
         </div>
     </div>
 
     <!-- Custom Interest Input -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div class="card-dark p-6 mt-6">
         <h2 class="text-lg font-semibold mb-3">Add Custom Interest</h2>
-        <p class="text-gray-600 text-sm mb-3">
+        <p class="text-muted text-sm mb-3">
             Don't see your team or player? Add any interest manually.
         </p>
-        <div class="flex gap-2">
+        <div class="flex gap-3">
             <input type="text" id="custom-interest" placeholder="e.g., Fresno State basketball"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button onclick="addCustomInterest()"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                class="input-dark flex-1">
+            <button onclick="addCustomInterest()" class="btn-primary px-6">
                 Add
             </button>
         </div>
     </div>
 
     <!-- Continue Button -->
-    <div class="mt-6 flex justify-end">
-        <a href="/" class="text-gray-600 hover:text-gray-800 px-4 py-2 mr-2">
+    <div class="mt-6 flex justify-end gap-3">
+        <a href="/" class="btn-ghost">
             Cancel
         </a>
-        <button onclick="continueToEmail()"
-            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
+        <button onclick="continueToEmail()" class="btn-primary px-8 py-3">
             Continue to Email
         </button>
     </div>

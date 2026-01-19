@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Sports Digest{% endblock %}
+{% block title %}Dashboard - SportsPulse{% endblock %}
 
 {% block content %}
-<div class="px-4">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+<div>
+    <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
 
     <div class="grid md:grid-cols-2 gap-6">
         <!-- Interests Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="card-dark p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold">Your Interests</h2>
-                <a href="/preferences" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                <a href="/preferences" class="link-orange text-sm">
                     Edit
                 </a>
             </div>
@@ -19,37 +19,36 @@
             {% if preferences %}
             <div class="flex flex-wrap gap-2">
                 {% for pref in preferences %}
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
+                <span class="interest-chip">
                     {% if pref.interest_data and pref.interest_data.logo_url %}
-                    <img src="{{ pref.interest_data.logo_url }}" alt="" class="w-4 h-4 mr-1 rounded">
+                    <img src="{{ pref.interest_data.logo_url }}" alt="">
                     {% endif %}
                     {{ pref.interest_name }}
                 </span>
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-gray-500">
+            <p class="text-muted">
                 No interests added yet.
-                <a href="/preferences" class="text-indigo-600 hover:text-indigo-800">Add some now</a>
+                <a href="/preferences" class="link-orange">Add some now</a>
             </p>
             {% endif %}
         </div>
 
         <!-- Generate Newsletter Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="card-dark p-6">
             <h2 class="text-lg font-semibold mb-4">Generate Newsletter</h2>
 
             {% if preferences %}
-            <p class="text-gray-600 mb-4">
+            <p class="text-muted mb-4">
                 Generate a new digest based on your {{ preferences|length }} interest(s).
             </p>
-            <button id="generate-btn" onclick="generateNewsletter()"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            <button id="generate-btn" onclick="generateNewsletter()" class="btn-primary">
                 Generate Now
             </button>
-            <div id="generate-status" class="mt-3 hidden">
-                <div class="flex items-center text-gray-600">
-                    <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+            <div id="generate-status" class="mt-4 hidden">
+                <div class="flex items-center text-muted">
+                    <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
@@ -57,7 +56,7 @@
                 </div>
             </div>
             {% else %}
-            <p class="text-gray-500">
+            <p class="text-muted">
                 Add some interests first to generate your newsletter.
             </p>
             {% endif %}
@@ -65,44 +64,44 @@
     </div>
 
     <!-- Recent Newsletters -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div class="card-dark p-6 mt-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold">Recent Newsletters</h2>
-            <a href="/newsletter/archive" class="text-indigo-600 hover:text-indigo-800 text-sm">
+            <a href="/newsletter/archive" class="link-orange text-sm">
                 View all
             </a>
         </div>
 
         {% if recent_newsletters %}
-        <div class="space-y-3">
+        <div class="space-y-1">
             {% for newsletter in recent_newsletters %}
-            <div class="flex justify-between items-center py-2 border-b last:border-0">
-                <div>
-                    <a href="/newsletter/view/{{ newsletter.id }}" class="text-gray-900 hover:text-indigo-600">
+            <div class="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
+                <div class="flex items-center gap-3">
+                    <a href="/newsletter/view/{{ newsletter.id }}" class="hover:text-orange-400 transition-colors">
                         Newsletter #{{ newsletter.id }}
                     </a>
-                    <span class="text-gray-500 text-sm ml-2">
+                    <span class="text-muted text-sm">
                         {{ newsletter.created_at.strftime('%b %d, %Y') }}
                     </span>
-                    <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 ml-2">
+                    <span class="badge-neutral">
                         {{ newsletter.provider_used }}
                     </span>
                 </div>
-                <div class="flex space-x-2">
+                <div class="flex items-center gap-3">
                     {% if not newsletter.sent_at %}
                     <button onclick="sendNewsletter({{ newsletter.id }})"
-                        class="text-sm text-indigo-600 hover:text-indigo-800">
+                        class="text-sm link-orange">
                         Send
                     </button>
                     {% else %}
-                    <span class="text-sm text-green-600">Sent</span>
+                    <span class="badge-success">Sent</span>
                     {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-gray-500">No newsletters generated yet.</p>
+        <p class="text-muted">No newsletters generated yet.</p>
         {% endif %}
     </div>
 </div>
