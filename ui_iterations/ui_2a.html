@@ -205,18 +205,8 @@
 
         .content-path {
             fill: none;
-            stroke-width: 2;
-            stroke-dasharray: 8 12;
-            animation: flow-to-mail 4s linear infinite;
-        }
-
-        @keyframes flow-to-mail {
-            from {
-                stroke-dashoffset: 100;
-            }
-            to {
-                stroke-dashoffset: 0;
-            }
+            stroke-width: 1;
+            opacity: 0.6;
         }
 
         /* Mail Icon */
@@ -297,7 +287,7 @@
         }
 
         .float-card.team {
-            background: linear-gradient(145deg, #1a1a2e 0%, #16162a 100%);
+            background: linear-gradient(145deg, #f5f5f5 0%, #e8e8e8 100%);
             padding: 12px;
             display: flex;
             align-items: center;
@@ -734,38 +724,32 @@
             <!-- Ohio State to Mail (long sweeping curve from left) -->
             <path class="content-path path-long"
                   d="M 42 18 Q 50 35, 58 42 T 68 52"
-                  stroke="url(#pathGradient1)"
-                  style="animation-duration: 4s;"/>
+                  stroke="url(#pathGradient1)"/>
 
-            <!-- Mbappe to Mail (short arc from top-right) -->
+            <!-- Ronaldo to Mail (short arc from top-right) -->
             <path class="content-path"
                   d="M 80 18 Q 75 35, 70 48"
-                  stroke="url(#pathGradient2)"
-                  style="animation-duration: 2.5s;"/>
+                  stroke="url(#pathGradient2)"/>
 
             <!-- Yankees to Mail (medium curve from right) -->
             <path class="content-path"
                   d="M 90 42 Q 82 45, 72 50"
-                  stroke="url(#pathGradient1)"
-                  style="animation-duration: 3s;"/>
+                  stroke="url(#pathGradient1)"/>
 
             <!-- Mahomes to Mail (dramatic S-curve from bottom) -->
             <path class="content-path"
                   d="M 55 78 Q 50 68, 58 60 T 68 54"
-                  stroke="url(#pathGradient2)"
-                  style="animation-duration: 4.5s;"/>
+                  stroke="url(#pathGradient2)"/>
 
             <!-- LeBron to Mail (gentle arc from bottom-right) -->
             <path class="content-path"
                   d="M 82 72 Q 78 62, 72 55"
-                  stroke="url(#pathGradient1)"
-                  style="animation-duration: 3.5s;"/>
+                  stroke="url(#pathGradient1)"/>
 
             <!-- Real Madrid to Mail (long path from far top) -->
             <path class="content-path path-long"
                   d="M 56 12 Q 60 28, 66 40 T 68 50"
-                  stroke="url(#pathGradient2)"
-                  style="animation-duration: 5s;"/>
+                  stroke="url(#pathGradient2)"/>
         </svg>
 
         <!-- Floating Cards -->
@@ -785,9 +769,9 @@
                 <img src="https://a.espncdn.com/i/teamlogos/ncaa/500/194.png" alt="Ohio State" referrerpolicy="no-referrer">
             </div>
 
-            <!-- Mbappe - Soccer Star -->
+            <!-- Ronaldo - Soccer Star -->
             <div class="float-card athlete connected card-mbappe">
-                <img src="https://a.espncdn.com/i/headshots/soccer/players/full/230477.png" alt="Kylian Mbappe" referrerpolicy="no-referrer">
+                <img src="https://a.espncdn.com/i/headshots/soccer/players/full/18921.png" alt="Cristiano Ronaldo" referrerpolicy="no-referrer">
             </div>
 
             <!-- Yankees - MLB -->
