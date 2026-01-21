@@ -96,3 +96,9 @@ class SimpleSignupResponse(BaseModel):
     message: str
     email: str
     preferences_count: int
+
+
+# Test newsletter schema
+class TestNewsletterRequest(BaseModel):
+    email: EmailStr
+    interests: list[str]  # Simple list of interest names like ["Dallas Cowboys", "Patrick Mahomes"]

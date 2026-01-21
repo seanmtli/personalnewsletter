@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.database import get_db
 from app.models import User, Preference, Newsletter
-from app.schemas import NewsletterResponse
+from app.schemas import NewsletterResponse, TestNewsletterRequest
 from app.routers.auth import get_current_user
 from app.services.curator import ContentCurator
 from app.services.emailer import EmailService
@@ -119,6 +119,78 @@ async def generate_newsletter(
         "newsletter_id": newsletter.id,
         "items_count": len(curated_content.items),
         "provider_used": curated_content.provider_used,
+    }
+
+
+@router.post("/test")
+async def test_newsletter(
+    test_request: TestNewsletterRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Quick test: generate and send newsletter with given preferences.
+    No auth required - uses email as identifier.
+    """
+    email = test_request.email
+    interests = test_request.interests
+
+    # 1. Get or create user
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(email=email, hashed_password=None, is_active=True)
+        db.add(user)
+        await db.flush()
+
+    # 2. Clear existing preferences and add new ones
+    await db.execute(delete(Preference).where(Preference.user_id == user.id))
+
+    for interest in interests:
+        pref = Preference(
+            user_id=user.id,
+            interest_type="custom",
+            interest_name=interest,
+        )
+        db.add(pref)
+
+    await db.commit()
+
+    # 3. Generate newsletter content
+    curator = ContentCurator()
+    curated_content = await curator.curate(interests)
+
+    # 4. Render HTML
+    newsletter_html = templates.get_template("newsletter_email.html").render(
+        newsletter_name=settings.newsletter_name,
+        generated_at=curated_content.generated_at,
+        items=curated_content.items,
+        site_url=settings.site_url,
+    )
+
+    # 5. Save to database
+    newsletter = Newsletter(
+        user_id=user.id,
+        content=newsletter_html,
+        content_json=curated_content.model_dump(mode="json"),
+        interests_used=interests,
+        provider_used=curated_content.provider_used,
+    )
+    db.add(newsletter)
+    await db.commit()
+    await db.refresh(newsletter)
+
+    # 6. Send email immediately
+    email_service = EmailService()
+    subject = f"{settings.newsletter_name} - Test"
+    sent = await email_service.send(email, subject, newsletter_html)
+
+    return {
+        "status": "sent" if sent else "generated_but_not_sent",
+        "newsletter_id": newsletter.id,
+        "preview_url": f"{settings.site_url}/newsletter/view/{newsletter.id}",
+        "provider_used": curated_content.provider_used,
+        "items_count": len(curated_content.items),
     }
 
 
