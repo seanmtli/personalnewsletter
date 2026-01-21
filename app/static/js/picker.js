@@ -16,6 +16,8 @@ function initializePicker(teams, athletes, existing) {
     renderTeams('nhl', 'nhl-teams');
     renderTeams('premier_league', 'premier-teams');
     renderTeams('mls', 'mls-teams');
+    renderTeams('wnba', 'wnba-teams');
+    renderTeams('nwsl', 'nwsl-teams');
 
     // Render athletes
     renderAthletes('nfl', 'nfl-athletes');
@@ -23,6 +25,11 @@ function initializePicker(teams, athletes, existing) {
     renderAthletes('mlb', 'mlb-athletes');
     renderAthletes('nhl', 'nhl-athletes');
     renderAthletes('soccer', 'soccer-athletes');
+    renderAthletes('wnba', 'wnba-athletes');
+    renderAthletes('nwsl', 'nwsl-athletes');
+
+    // Render Olympics athletes grouped by sport
+    renderOlympicsAthletes();
 
     updateSelectedDisplay();
 }
@@ -43,29 +50,72 @@ function renderAthletes(sport, containerId) {
     container.innerHTML = athletes.map(athlete => createCard(athlete, 'athlete')).join('');
 }
 
+function renderOlympicsAthletes() {
+    const container = document.getElementById('olympics-athletes-container');
+    if (!container) return;
+
+    const athletes = athletesData['winter_olympics'] || [];
+    if (athletes.length === 0) return;
+
+    // Group athletes by sport discipline
+    const sportGroups = {};
+    athletes.forEach(athlete => {
+        const sport = athlete.sport || 'Other';
+        if (!sportGroups[sport]) {
+            sportGroups[sport] = [];
+        }
+        sportGroups[sport].push(athlete);
+    });
+
+    // Sport icons mapping
+    const sportIcons = {
+        'Alpine Skiing': '⛷️',
+        'Snowboard': '🏂',
+        'Figure Skating': '⛸️',
+        'Speed Skating': '🏃',
+        'Freestyle Skiing': '🎿',
+        'Other': '🏅'
+    };
+
+    // Render each sport group
+    let html = '';
+    for (const [sport, sportAthletes] of Object.entries(sportGroups)) {
+        const icon = sportIcons[sport] || '🏅';
+        html += `
+            <div class="olympics-sport-header">
+                <span class="text-xl">${icon}</span>
+                <span>${sport}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
+                ${sportAthletes.map(athlete => createCard(athlete, 'athlete')).join('')}
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
 function createCard(item, type) {
     const isSelected = selectedInterests.has(item.name);
-    const selectedClass = isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'hover:bg-gray-50';
+    const selectedClass = isSelected ? 'selected' : '';
     const imageUrl = item.logo_url || item.photo_url;
-    const subtitle = type === 'athlete' && item.team ? item.team : (item.league || '');
+    // Handle Olympics athletes which have 'sport' instead of 'team'
+    const subtitle = type === 'athlete' ? (item.team || item.sport || '') : (item.league || '');
 
     return `
-        <div class="picker-card cursor-pointer rounded-lg border p-3 text-center transition-all ${selectedClass}"
+        <div class="picker-card ${selectedClass}"
              onclick="toggleInterest('${escapeHtml(item.name)}', '${type}', ${JSON.stringify(item).replace(/"/g, '&quot;')})"
              data-name="${escapeHtml(item.name)}">
-            <div class="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
-                ${imageUrl
-                    ? `<img src="${imageUrl}" alt="${escapeHtml(item.name)}"
-                           class="max-w-full max-h-full object-contain rounded"
-                           referrerpolicy="no-referrer"
-                           loading="lazy"
-                           onerror="this.parentElement.innerHTML='<div class=\\'w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg\\'>${item.name.charAt(0)}</div>'">`
-                    : `<div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg">${item.name.charAt(0)}</div>`
-                }
-            </div>
-            <p class="text-sm font-medium text-gray-800 leading-tight">${escapeHtml(item.name)}</p>
-            ${subtitle ? `<p class="text-xs text-gray-500 mt-0.5">${escapeHtml(subtitle)}</p>` : ''}
-            ${isSelected ? '<span class="text-xs text-indigo-600 mt-1 inline-block">✓ Selected</span>' : ''}
+            ${imageUrl
+                ? `<img src="${imageUrl}" alt="${escapeHtml(item.name)}"
+                       referrerpolicy="no-referrer"
+                       loading="lazy"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div class="w-14 h-14 bg-gray-700 rounded-full items-center justify-center text-gray-400 text-lg" style="display:none">${item.name.charAt(0)}</div>`
+                : `<div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center text-gray-400 text-lg">${item.name.charAt(0)}</div>`
+            }
+            <p class="card-name">${escapeHtml(item.name)}</p>
+            ${subtitle ? `<p class="text-xs text-gray-400 mt-0.5">${escapeHtml(subtitle)}</p>` : ''}
         </div>
     `;
 }
@@ -87,11 +137,9 @@ function toggleInterest(name, type, data) {
     const cards = document.querySelectorAll(`[data-name="${CSS.escape(name)}"]`);
     cards.forEach(card => {
         if (selectedInterests.has(name)) {
-            card.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-            card.classList.remove('hover:bg-gray-50');
+            card.classList.add('selected');
         } else {
-            card.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-            card.classList.add('hover:bg-gray-50');
+            card.classList.remove('selected');
         }
     });
 
@@ -104,8 +152,7 @@ function removeInterest(name) {
     // Update card appearance
     const cards = document.querySelectorAll(`[data-name="${CSS.escape(name)}"]`);
     cards.forEach(card => {
-        card.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-        card.classList.add('hover:bg-gray-50');
+        card.classList.remove('selected');
     });
 
     updateSelectedDisplay();
@@ -165,11 +212,9 @@ function switchTab(tabName) {
     // Update tab buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === tabName) {
-            btn.classList.add('border-indigo-500', 'text-indigo-600');
-            btn.classList.remove('border-transparent', 'text-gray-500');
+            btn.classList.add('active');
         } else {
-            btn.classList.remove('border-indigo-500', 'text-indigo-600');
-            btn.classList.add('border-transparent', 'text-gray-500');
+            btn.classList.remove('active');
         }
     });
 

@@ -176,5 +176,36 @@
     {"name": "St. Louis City SC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/28683.png", "league": "MLS"},
     {"name": "Toronto FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5768.png", "league": "MLS"},
     {"name": "Vancouver Whitecaps", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5891.png", "league": "MLS"}
+  ],
+  "wnba": [
+    {"name": "Atlanta Dream", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/atl.png", "league": "WNBA"},
+    {"name": "Chicago Sky", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/chi.png", "league": "WNBA"},
+    {"name": "Connecticut Sun", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/conn.png", "league": "WNBA"},
+    {"name": "Dallas Wings", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/dal.png", "league": "WNBA"},
+    {"name": "Golden State Valkyries", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/gs.png", "league": "WNBA"},
+    {"name": "Indiana Fever", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/ind.png", "league": "WNBA"},
+    {"name": "Las Vegas Aces", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png", "league": "WNBA"},
+    {"name": "Los Angeles Sparks", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/la.png", "league": "WNBA"},
+    {"name": "Minnesota Lynx", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/min.png", "league": "WNBA"},
+    {"name": "New York Liberty", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/ny.png", "league": "WNBA"},
+    {"name": "Phoenix Mercury", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/phx.png", "league": "WNBA"},
+    {"name": "Seattle Storm", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/sea.png", "league": "WNBA"},
+    {"name": "Washington Mystics", "logo_url": "https://a.espncdn.com/i/teamlogos/wnba/500/wsh.png", "league": "WNBA"}
+  ],
+  "nwsl": [
+    {"name": "Angel City FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/20172.png", "league": "NWSL"},
+    {"name": "Bay FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/21578.png", "league": "NWSL"},
+    {"name": "Chicago Red Stars", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5765.png", "league": "NWSL"},
+    {"name": "Houston Dash", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/6513.png", "league": "NWSL"},
+    {"name": "Kansas City Current", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/19831.png", "league": "NWSL"},
+    {"name": "NJ/NY Gotham FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5765.png", "league": "NWSL"},
+    {"name": "North Carolina Courage", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/14895.png", "league": "NWSL"},
+    {"name": "Orlando Pride", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/9922.png", "league": "NWSL"},
+    {"name": "Portland Thorns FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5893.png", "league": "NWSL"},
+    {"name": "Racing Louisville FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/19832.png", "league": "NWSL"},
+    {"name": "San Diego Wave FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/20171.png", "league": "NWSL"},
+    {"name": "Seattle Reign FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5892.png", "league": "NWSL"},
+    {"name": "Utah Royals FC", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/15289.png", "league": "NWSL"},
+    {"name": "Washington Spirit", "logo_url": "https://a.espncdn.com/i/teamlogos/soccer/500/5945.png", "league": "NWSL"}
   ]
 }
