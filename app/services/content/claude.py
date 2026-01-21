@@ -12,11 +12,20 @@ CURATOR_PROMPT = """You are a sports news curator. The user follows these teams/
 {interests}
 
 Search the web for the most important and interesting sports news from the past week
-related to these interests. Find content from:
+related to these interests.
+
+IMPORTANT: The FIRST item MUST be a popular tweet from Twitter/X. Search for viral or
+high-engagement tweets from:
+- Star players on these teams
+- Beat reporters covering these teams (e.g., @AdamSchefter, @wojespn, @ShamsCharania)
+- Official team accounts
+- Sports analysts discussing these interests
+
+The remaining items should include a mix of:
 - News articles (ESPN, The Athletic, team sites, local news)
-- Notable tweets from players, reporters, or team accounts
 - YouTube highlights or interviews
 - Interesting Reddit discussions
+- Additional notable tweets
 
 Select the TOP 5-7 stories. For each, provide:
 - headline: A compelling headline
@@ -111,6 +120,9 @@ class ClaudeProvider(ContentProvider):
             # Parse JSON response
             items = self._parse_response(result_text)
 
+            # Ensure a tweet is the first item
+            items = self._ensure_tweet_first(items)
+
             # Generate screenshots for social content
             items = await self._generate_screenshots(items)
 
@@ -178,6 +190,30 @@ class ClaudeProvider(ContentProvider):
             print(f"Failed to parse Claude response: {e}")
             print(f"Response text: {response_text[:500]}")
             return []
+
+    def _ensure_tweet_first(self, items: list[ContentItem]) -> list[ContentItem]:
+        """Ensure a tweet is the first item in the list."""
+        if not items:
+            return items
+
+        # If first item is already a tweet, we're good
+        if items[0].source_type == "tweet":
+            return items
+
+        # Find the first tweet in the list
+        tweet_index = None
+        for i, item in enumerate(items):
+            if item.source_type == "tweet":
+                tweet_index = i
+                break
+
+        # If we found a tweet, move it to the front
+        if tweet_index is not None:
+            tweet = items.pop(tweet_index)
+            items.insert(0, tweet)
+            print(f"Reordered: moved tweet to first position")
+
+        return items
 
     async def _generate_screenshots(self, items: list[ContentItem]) -> list[ContentItem]:
         """Generate screenshots for tweets and reddit posts."""
