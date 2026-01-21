@@ -43,6 +43,11 @@
                     class="tab-btn">
                     Soccer
                 </button>
+                <button onclick="switchTab('olympics')" data-tab="olympics"
+                    class="tab-btn olympics-tab relative">
+                    <span class="olympics-gradient">Winter Olympics</span>
+                    <span class="olympics-badge">2026</span>
+                </button>
             </nav>
         </div>
 
@@ -63,7 +68,13 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nba-teams"></div>
 
                 <h3 class="section-header">Popular NBA Athletes</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nba-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8" id="nba-athletes"></div>
+
+                <h3 class="section-header">WNBA Teams</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="wnba-teams"></div>
+
+                <h3 class="section-header">Popular WNBA Athletes</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="wnba-athletes"></div>
             </div>
 
             <!-- Baseball Tab -->
@@ -93,7 +104,32 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="mls-teams"></div>
 
                 <h3 class="section-header">Popular Soccer Athletes</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="soccer-athletes"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8" id="soccer-athletes"></div>
+
+                <h3 class="section-header">NWSL Teams</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6" id="nwsl-teams"></div>
+
+                <h3 class="section-header">Popular NWSL Athletes</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="nwsl-athletes"></div>
+            </div>
+
+            <!-- Olympics Tab -->
+            <div id="tab-olympics" class="tab-content hidden">
+                <!-- Event Banner -->
+                <div class="olympics-banner mb-6">
+                    <div class="flex items-center justify-center gap-3">
+                        <span class="text-2xl">&#127954;</span>
+                        <div class="text-center">
+                            <h2 class="text-xl font-bold">Milan Cortina 2026 Winter Olympics</h2>
+                            <p class="text-sm opacity-90">February 6-22, 2026 | Team USA</p>
+                        </div>
+                        <span class="text-2xl">&#127954;</span>
+                    </div>
+                </div>
+
+                <div id="olympics-athletes-container">
+                    <!-- Athletes will be grouped by sport discipline -->
+                </div>
             </div>
         </div>
     </div>
