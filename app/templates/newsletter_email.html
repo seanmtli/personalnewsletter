@@ -106,6 +106,91 @@
         .source-icon {
             display: inline;
         }
+        /* Tweet embed styles */
+        .tweet-embed {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .tweet-embed img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid #e1e8ed;
+        }
+        /* Tweet card fallback styles */
+        .tweet-card {
+            border: 1px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 16px;
+            max-width: 520px;
+            margin: 20px auto;
+            background: #fff;
+        }
+        .tweet-card-header {
+            margin-bottom: 12px;
+        }
+        .tweet-card-author {
+            font-weight: bold;
+            color: #14171a;
+        }
+        .tweet-card-handle {
+            color: #657786;
+            margin-left: 4px;
+        }
+        .tweet-card-text {
+            font-size: 15px;
+            line-height: 1.4;
+            margin: 0 0 12px;
+            color: #14171a;
+        }
+        .tweet-card-link {
+            color: #1da1f2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        /* Reddit embed styles */
+        .reddit-embed {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .reddit-embed img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+        }
+        /* Reddit card fallback styles */
+        .reddit-card {
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 520px;
+            margin: 20px auto;
+            background: #fff;
+        }
+        .reddit-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .reddit-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+        .reddit-card-subreddit {
+            color: #1a1a1b;
+            font-weight: 500;
+        }
+        .reddit-card-text {
+            font-size: 15px;
+            line-height: 1.4;
+            margin: 0 0 12px;
+            color: #1a1a1b;
+        }
+        .reddit-card-link {
+            color: #ff4500;
+            text-decoration: none;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +201,111 @@
         </div>
 
         {% for item in items %}
+        {% if item.source_type == 'tweet' and item.screenshot_url %}
+        <!-- Tweet Screenshot Embed -->
+        <div class="story">
+            <h2 style="margin-bottom: 12px;">
+                <a href="{{ item.url }}">{{ item.headline }}</a>
+            </h2>
+            <div class="tweet-embed">
+                <a href="{{ item.url }}" target="_blank" style="text-decoration: none;">
+                    <img src="{{ item.screenshot_url }}"
+                         alt="Tweet from {{ item.author_handle or item.source_name }}"
+                         width="520">
+                </a>
+            </div>
+            <div class="story-meta">
+                <span class="source">
+                    <span class="source-icon">🐦</span>
+                    {{ item.source_name }}{% if item.author_handle %} ({{ item.author_handle }}){% endif %}
+                </span>
+                {% if item.published_at %}
+                &bull; {{ item.published_at.strftime('%b %d, %Y') if item.published_at else '' }}
+                {% endif %}
+            </div>
+            {% if item.relevance %}
+            <p class="relevance">{{ item.relevance }}</p>
+            {% endif %}
+        </div>
+
+        {% elif item.source_type == 'tweet' %}
+        <!-- Tweet Card Fallback (no screenshot) -->
+        <div class="story">
+            <h2 style="margin-bottom: 12px;">
+                <a href="{{ item.url }}">{{ item.headline }}</a>
+            </h2>
+            <div class="tweet-card">
+                <div class="tweet-card-header">
+                    <span class="tweet-card-author">{{ item.source_name }}</span>
+                    {% if item.author_handle %}
+                    <span class="tweet-card-handle">{{ item.author_handle }}</span>
+                    {% endif %}
+                </div>
+                <p class="tweet-card-text">{{ item.summary }}</p>
+                <a href="{{ item.url }}" class="tweet-card-link" target="_blank">View on X →</a>
+            </div>
+            <div class="story-meta">
+                {% if item.published_at %}
+                {{ item.published_at.strftime('%b %d, %Y') if item.published_at else '' }}
+                {% endif %}
+            </div>
+            {% if item.relevance %}
+            <p class="relevance">{{ item.relevance }}</p>
+            {% endif %}
+        </div>
+
+        {% elif item.source_type == 'reddit' and item.screenshot_url %}
+        <!-- Reddit Screenshot Embed -->
+        <div class="story">
+            <h2 style="margin-bottom: 12px;">
+                <a href="{{ item.url }}">{{ item.headline }}</a>
+            </h2>
+            <div class="reddit-embed">
+                <a href="{{ item.url }}" target="_blank" style="text-decoration: none;">
+                    <img src="{{ item.screenshot_url }}"
+                         alt="Reddit post from {{ item.source_name }}"
+                         width="520">
+                </a>
+            </div>
+            <div class="story-meta">
+                <span class="source">
+                    <span class="source-icon">💬</span>
+                    {{ item.source_name }}
+                </span>
+                {% if item.published_at %}
+                &bull; {{ item.published_at.strftime('%b %d, %Y') if item.published_at else '' }}
+                {% endif %}
+            </div>
+            {% if item.relevance %}
+            <p class="relevance">{{ item.relevance }}</p>
+            {% endif %}
+        </div>
+
+        {% elif item.source_type == 'reddit' %}
+        <!-- Reddit Card Fallback (no screenshot) -->
+        <div class="story">
+            <h2 style="margin-bottom: 12px;">
+                <a href="{{ item.url }}">{{ item.headline }}</a>
+            </h2>
+            <div class="reddit-card">
+                <div class="reddit-card-header">
+                    <span class="reddit-card-subreddit">r/{{ item.source_name }}</span>
+                </div>
+                <p class="reddit-card-text">{{ item.summary }}</p>
+                <a href="{{ item.url }}" class="reddit-card-link" target="_blank">View on Reddit →</a>
+            </div>
+            <div class="story-meta">
+                {% if item.published_at %}
+                {{ item.published_at.strftime('%b %d, %Y') if item.published_at else '' }}
+                {% endif %}
+            </div>
+            {% if item.relevance %}
+            <p class="relevance">{{ item.relevance }}</p>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- Standard Article/Video Card -->
         <div class="story">
             <div class="story-header">
                 {% if item.thumbnail_url %}
@@ -130,9 +320,8 @@
                         <span class="source">
                             <span class="source-icon">
                                 {% if item.source_type == 'article' %}📰
-                                {% elif item.source_type == 'tweet' %}🐦
                                 {% elif item.source_type == 'video' %}🎬
-                                {% elif item.source_type == 'reddit' %}💬
+                                {% else %}📰
                                 {% endif %}
                             </span>
                             {{ item.source_name }}
@@ -147,6 +336,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         {% endfor %}
 
         <div class="footer">

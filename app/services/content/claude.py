@@ -4,6 +4,7 @@ from anthropic import Anthropic
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
 from app.config import get_settings
+from app.services.screenshot import ScreenshotService
 
 settings = get_settings()
 
@@ -27,6 +28,12 @@ Select the TOP 5-7 stories. For each, provide:
 - published_at: ISO datetime if known, null if unknown
 - thumbnail_url: Image URL if available, null otherwise
 
+For tweets specifically, also include:
+- author_handle: The @username (e.g., "@ShamsCharania")
+
+For Reddit posts, also include:
+- subreddit: The subreddit name without r/ (e.g., "nba")
+
 Return ONLY valid JSON as an array of objects matching this schema. No other text.
 Prioritize: game results, trades, injuries, viral moments, analysis.
 Skip: paywalled content, broken links, low-quality sources.
@@ -41,6 +48,17 @@ Example format:
     "url": "https://espn.com/...",
     "relevance": "Major playoff victory for your team",
     "published_at": "2024-01-15T20:00:00Z",
+    "thumbnail_url": null
+  }},
+  {{
+    "headline": "Shams: Lakers acquire star in blockbuster trade",
+    "summary": "Breaking news from Shams Charania...",
+    "source_type": "tweet",
+    "source_name": "Shams Charania",
+    "url": "https://x.com/ShamsCharania/status/1234567890",
+    "author_handle": "@ShamsCharania",
+    "relevance": "Major trade impacts your team's roster",
+    "published_at": "2024-01-15T18:30:00Z",
     "thumbnail_url": null
   }}
 ]"""
@@ -92,6 +110,10 @@ class ClaudeProvider(ContentProvider):
 
             # Parse JSON response
             items = self._parse_response(result_text)
+
+            # Generate screenshots for social content
+            items = await self._generate_screenshots(items)
+
             return items
 
         except Exception as e:
@@ -111,6 +133,7 @@ class ClaudeProvider(ContentProvider):
                 text = text.split("```")[1].split("```")[0]
 
             data = json.loads(text)
+            screenshot_service = ScreenshotService()
 
             items = []
             for item_data in data:
@@ -124,15 +147,28 @@ class ClaudeProvider(ContentProvider):
                     except (ValueError, TypeError):
                         pass
 
+                # Extract tweet metadata from URL if it's a tweet
+                url = item_data.get("url", "")
+                tweet_id = None
+                author_handle = item_data.get("author_handle")
+
+                if item_data.get("source_type") == "tweet" and url:
+                    tweet_id = screenshot_service.extract_tweet_id(url)
+                    # Use extracted handle as fallback if not in response
+                    if not author_handle:
+                        author_handle = screenshot_service.extract_author_handle(url)
+
                 item = ContentItem(
                     headline=item_data.get("headline", ""),
                     summary=item_data.get("summary", ""),
                     source_type=item_data.get("source_type", "article"),
                     source_name=item_data.get("source_name", "Unknown"),
-                    url=item_data.get("url", ""),
+                    url=url,
                     relevance=item_data.get("relevance", ""),
                     published_at=published_at,
                     thumbnail_url=item_data.get("thumbnail_url"),
+                    tweet_id=tweet_id,
+                    author_handle=author_handle,
                 )
                 items.append(item)
 
@@ -142,3 +178,19 @@ class ClaudeProvider(ContentProvider):
             print(f"Failed to parse Claude response: {e}")
             print(f"Response text: {response_text[:500]}")
             return []
+
+    async def _generate_screenshots(self, items: list[ContentItem]) -> list[ContentItem]:
+        """Generate screenshots for tweets and reddit posts."""
+        screenshot_service = ScreenshotService()
+
+        for item in items:
+            if item.source_type == "tweet" and item.url:
+                screenshot_url = await screenshot_service.get_tweet_screenshot(item.url)
+                if screenshot_url:
+                    item.screenshot_url = screenshot_url
+            elif item.source_type == "reddit" and item.url:
+                screenshot_url = await screenshot_service.get_reddit_screenshot(item.url)
+                if screenshot_url:
+                    item.screenshot_url = screenshot_url
+
+        return items

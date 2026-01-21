@@ -60,6 +60,10 @@ class ContentItem(BaseModel):
     relevance: str
     published_at: datetime | None = None
     thumbnail_url: str | None = None
+    # Social embed fields
+    tweet_id: str | None = None  # Tweet ID extracted from URL
+    screenshot_url: str | None = None  # Generated screenshot image URL
+    author_handle: str | None = None  # @username for attribution
 
 
 class CuratedNewsletter(BaseModel):
