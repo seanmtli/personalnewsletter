@@ -11,7 +11,7 @@ class ScreenshotService:
     """Generate screenshots of tweets and reddit posts."""
 
     def __init__(self):
-        self.tweetpik_api_key = settings.tweetpik_api_key
+        self.twittershots_api_key = settings.twittershots_api_key
 
     def extract_tweet_id(self, url: str) -> str | None:
         """Extract tweet ID from a Twitter/X URL."""
@@ -42,12 +42,12 @@ class ScreenshotService:
         """
         Generate screenshot URL for a tweet.
 
-        Uses TweetPik API if configured. Returns None if:
+        Uses TwitterShots API if configured. Returns None if:
         - No API key configured
         - API call fails
         - Invalid tweet URL
         """
-        if not self.tweetpik_api_key:
+        if not self.twittershots_api_key:
             return None
 
         tweet_id = self.extract_tweet_id(tweet_url)
@@ -56,25 +56,27 @@ class ScreenshotService:
 
         try:
             async with httpx.AsyncClient() as client:
-                # TweetPik API v2
-                response = await client.post(
-                    "https://tweetpik.com/api/v2/images",
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": self.tweetpik_api_key,
+                # TwitterShots API - returns image directly
+                response = await client.get(
+                    f"https://api.twittershots.com/api/v1/screenshot/{tweet_id}",
+                    params={
+                        "format": "png",
+                        "theme": "light",
                     },
-                    json={
-                        "url": tweet_url,
+                    headers={
+                        "X-API-KEY": self.twittershots_api_key,
+                        "Accept": "image/png",
                     },
                     timeout=30.0,
                 )
 
                 if response.status_code == 200:
-                    data = response.json()
-                    # TweetPik returns the screenshot URL in the response
-                    return data.get("url")
+                    # TwitterShots returns the image directly
+                    # We need to use the URL directly for embedding in emails
+                    # The API URL with key can be used as the image source
+                    return f"https://api.twittershots.com/api/v1/screenshot/{tweet_id}?format=png&theme=light&apiKey={self.twittershots_api_key}"
                 else:
-                    print(f"TweetPik API error: {response.status_code} - {response.text}")
+                    print(f"TwitterShots API error: {response.status_code} - {response.text}")
                     return None
 
         except Exception as e:

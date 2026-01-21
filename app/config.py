@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     perplexity_api_key: str = ""
 
-    # Screenshot service (TweetPik)
-    tweetpik_api_key: str = ""
+    # Screenshot service (TwitterShots)
+    twittershots_api_key: str = ""
 
     # Email - Resend
     resend_api_key: str = ""
