@@ -87,8 +87,21 @@ class RSSProvider(ContentProvider):
             link = entry.get("link", "")
 
             # Check if entry matches any interest
+            # Match on individual words from interests (e.g., "Dallas Cowboys" matches "Cowboys")
             entry_text = f"{title} {summary}".lower()
-            matching_interests = [i for i in interests_lower if i in entry_text]
+            matching_interests = []
+            for interest in interests_lower:
+                # Check for full interest match
+                if interest in entry_text:
+                    matching_interests.append(interest)
+                else:
+                    # Check for individual word matches (for multi-word interests)
+                    words = interest.split()
+                    if len(words) > 1:
+                        for word in words:
+                            if len(word) > 3 and word in entry_text:  # Skip short words
+                                matching_interests.append(interest)
+                                break
 
             if matching_interests:
                 # Parse published date
