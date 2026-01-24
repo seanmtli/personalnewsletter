@@ -102,3 +102,22 @@ class SimpleSignupResponse(BaseModel):
 class TestNewsletterRequest(BaseModel):
     email: EmailStr
     interests: list[str]  # Simple list of interest names like ["Dallas Cowboys", "Patrick Mahomes"]
+
+
+# Debug endpoint schema
+class DebugNewsletterRequest(BaseModel):
+    interests: list[str]
+
+
+class ProviderDebugResult(BaseModel):
+    provider: str
+    success: bool
+    items_count: int
+    error: str | None = None
+    items: list[ContentItem] = []
+
+
+class DebugNewsletterResponse(BaseModel):
+    providers_available: list[str]
+    results: list[ProviderDebugResult]
+    recommendation: str

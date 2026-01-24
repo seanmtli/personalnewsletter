@@ -7,7 +7,7 @@ from sqlalchemy import select, delete
 
 from app.database import get_db
 from app.models import User, Preference, Newsletter
-from app.schemas import NewsletterResponse, TestNewsletterRequest
+from app.schemas import NewsletterResponse, TestNewsletterRequest, DebugNewsletterRequest, DebugNewsletterResponse
 from app.routers.auth import get_current_user
 from app.services.curator import ContentCurator
 from app.services.emailer import EmailService
@@ -192,6 +192,47 @@ async def test_newsletter(
         "provider_used": curated_content.provider_used,
         "items_count": len(curated_content.items),
     }
+
+
+@router.post("/debug", response_model=DebugNewsletterResponse)
+async def debug_providers(request: DebugNewsletterRequest):
+    """
+    Debug endpoint to test each content provider individually.
+    Returns detailed error info for diagnosing newsletter generation failures.
+    No authentication required for easier debugging.
+    """
+    interests = request.interests
+    if not interests:
+        raise HTTPException(status_code=400, detail="At least one interest required")
+
+    curator = ContentCurator()
+
+    # Get available providers
+    providers_available = curator.get_available_providers()
+
+    # Test each provider
+    results = await curator.debug_providers(interests)
+
+    # Generate recommendation based on results
+    working_providers = [r for r in results if r.success and r.items_count >= 3]
+    partial_providers = [r for r in results if r.success and 0 < r.items_count < 3]
+    failed_providers = [r for r in results if not r.success]
+
+    if working_providers:
+        recommendation = f"Provider '{working_providers[0].provider}' is working ({working_providers[0].items_count} items). Newsletter generation should succeed."
+    elif partial_providers:
+        recommendation = f"Provider '{partial_providers[0].provider}' returned {partial_providers[0].items_count} items (below threshold of 3). Check provider configuration."
+    elif failed_providers:
+        errors = "; ".join([f"{r.provider}: {r.error}" for r in failed_providers])
+        recommendation = f"All providers failed. Errors: {errors}"
+    else:
+        recommendation = "No providers configured."
+
+    return DebugNewsletterResponse(
+        providers_available=providers_available,
+        results=results,
+        recommendation=recommendation,
+    )
 
 
 @router.post("/send/{newsletter_id}")

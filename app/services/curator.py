@@ -1,5 +1,6 @@
+import traceback
 from datetime import datetime
-from app.schemas import CuratedNewsletter, ContentItem
+from app.schemas import CuratedNewsletter, ContentItem, ProviderDebugResult
 from app.services.content.claude import ClaudeProvider
 from app.services.content.perplexity import PerplexityProvider
 from app.services.content.rss import RSSProvider
@@ -42,21 +43,33 @@ class ContentCurator:
         items: list[ContentItem] = []
         provider_used = "none"
 
+        errors = []  # Track errors for debugging
+
         for provider in self.providers:
             try:
-                print(f"Trying {provider.name} provider...")
+                print(f"[CURATOR] Trying {provider.name} provider...")
                 items = await provider.fetch_content(interests)
 
                 if len(items) >= MIN_ITEMS_THRESHOLD:
                     provider_used = provider.name
-                    print(f"Success: {len(items)} items from {provider.name}")
+                    print(f"[CURATOR] Success: {len(items)} items from {provider.name}")
                     break
                 else:
-                    print(f"{provider.name} returned only {len(items)} items, trying next...")
+                    msg = f"{provider.name} returned only {len(items)} items, trying next..."
+                    print(f"[CURATOR] {msg}")
+                    errors.append(msg)
 
             except Exception as e:
-                print(f"{provider.name} failed: {e}")
+                error_detail = f"{provider.name} failed: {type(e).__name__}: {str(e)}"
+                print(f"[CURATOR] {error_detail}")
+                print(f"[CURATOR] Stack trace: {traceback.format_exc()}")
+                errors.append(error_detail)
                 continue
+
+        # Log summary if no provider worked
+        if provider_used == "none":
+            print(f"[CURATOR] WARNING: All providers failed or returned insufficient items!")
+            print(f"[CURATOR] Errors: {errors}")
 
         # If we still have some items (even if < threshold), use them
         if items and provider_used == "none":
@@ -100,3 +113,72 @@ class ContentCurator:
             interests_used=interests,
             provider_used=provider_name,
         )
+
+    async def debug_providers(self, interests: list[str]) -> list[ProviderDebugResult]:
+        """
+        Test each provider individually and return detailed debug information.
+
+        Args:
+            interests: List of interests to test with
+
+        Returns:
+            List of ProviderDebugResult with success/failure info for each provider
+        """
+        results = []
+
+        provider_configs = [
+            ("claude", ClaudeProvider, bool(settings.anthropic_api_key)),
+            ("perplexity", PerplexityProvider, bool(settings.perplexity_api_key)),
+            ("rss", RSSProvider, True),  # RSS is always available
+        ]
+
+        for provider_name, provider_class, is_available in provider_configs:
+            if not is_available:
+                results.append(ProviderDebugResult(
+                    provider=provider_name,
+                    success=False,
+                    items_count=0,
+                    error=f"API key not configured for {provider_name}",
+                    items=[],
+                ))
+                continue
+
+            try:
+                print(f"[DEBUG] Testing {provider_name} provider...")
+                provider = provider_class()
+                items = await provider.fetch_content(interests)
+
+                results.append(ProviderDebugResult(
+                    provider=provider_name,
+                    success=True,
+                    items_count=len(items),
+                    error=None,
+                    items=items[:3],  # Include first 3 items for inspection
+                ))
+                print(f"[DEBUG] {provider_name}: SUCCESS - {len(items)} items")
+
+            except Exception as e:
+                error_detail = f"{type(e).__name__}: {str(e)}"
+                stack_trace = traceback.format_exc()
+                print(f"[DEBUG] {provider_name}: FAILED - {error_detail}")
+                print(f"[DEBUG] Stack trace:\n{stack_trace}")
+
+                results.append(ProviderDebugResult(
+                    provider=provider_name,
+                    success=False,
+                    items_count=0,
+                    error=error_detail,
+                    items=[],
+                ))
+
+        return results
+
+    def get_available_providers(self) -> list[str]:
+        """Return list of configured provider names."""
+        providers = []
+        if settings.anthropic_api_key:
+            providers.append("claude")
+        if settings.perplexity_api_key:
+            providers.append("perplexity")
+        providers.append("rss")  # Always available
+        return providers

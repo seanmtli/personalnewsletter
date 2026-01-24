@@ -1,4 +1,5 @@
 import feedparser
+import httpx
 from datetime import datetime
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
@@ -48,12 +49,20 @@ class RSSProvider(ContentProvider):
         feeds_to_fetch = self._get_relevant_feeds(interests)
 
         all_items = []
+        seen_urls = set()  # Track URLs to avoid duplicates
+
         for feed_name, feed_url in feeds_to_fetch.items():
             try:
                 items = await self._fetch_feed(feed_url, interests)
-                all_items.extend(items)
+                for item in items:
+                    # Deduplicate by URL
+                    if item.url not in seen_urls:
+                        seen_urls.add(item.url)
+                        all_items.append(item)
             except Exception as e:
-                print(f"Error fetching {feed_name} feed: {e}")
+                print(f"[RSS] Error fetching {feed_name} feed: {e}")
+
+        print(f"[RSS] Found {len(all_items)} unique items matching {interests}")
 
         # Sort by relevance (items that match more interests rank higher)
         all_items.sort(key=lambda x: self._relevance_score(x, interests), reverse=True)
@@ -76,7 +85,15 @@ class RSSProvider(ContentProvider):
 
     async def _fetch_feed(self, feed_url: str, interests: list[str]) -> list[ContentItem]:
         """Fetch and parse a single RSS feed."""
-        feed = feedparser.parse(feed_url)
+        # Use httpx to fetch the feed (handles SSL better than feedparser's default)
+        async with httpx.AsyncClient(verify=False, timeout=30.0) as client:
+            response = await client.get(
+                feed_url,
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            )
+            response.raise_for_status()
+            feed = feedparser.parse(response.text)
+
         items = []
 
         interests_lower = [i.lower() for i in interests]
