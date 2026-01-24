@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from anthropic import Anthropic
 from app.services.content.base import ContentProvider
@@ -221,12 +222,12 @@ class ClaudeProvider(ContentProvider):
                         author_handle = screenshot_service.extract_author_handle(url)
 
                 item = ContentItem(
-                    headline=item_data.get("headline", ""),
-                    summary=item_data.get("summary", ""),
+                    headline=self._strip_citations(item_data.get("headline", "")),
+                    summary=self._strip_citations(item_data.get("summary", "")),
                     source_type=item_data.get("source_type", "article"),
                     source_name=item_data.get("source_name", "Unknown"),
                     url=url,
-                    relevance=item_data.get("relevance", ""),
+                    relevance=self._strip_citations(item_data.get("relevance", "")),
                     published_at=published_at,
                     thumbnail_url=item_data.get("thumbnail_url"),
                     tweet_id=tweet_id,
@@ -241,6 +242,22 @@ class ClaudeProvider(ContentProvider):
             print(f"Failed to parse Claude response: {e}")
             print(f"Response text: {response_text[:500]}")
             return []
+
+    def _strip_citations(self, text: str) -> str:
+        """Remove Claude web search citation tags from text.
+
+        Citations look like: <cite index="23-3,23-4,23-5">text</cite>
+        or sometimes just: <cite index="23-3,23-4,23-5">text (unclosed)
+        """
+        if not text:
+            return text
+        # Remove <cite ...>...</cite> tags (closed)
+        text = re.sub(r'<cite[^>]*>([^<]*)</cite>', r'\1', text)
+        # Remove <cite ...> tags (unclosed - just the opening tag)
+        text = re.sub(r'<cite[^>]*>', '', text)
+        # Remove any remaining </cite> closing tags
+        text = re.sub(r'</cite>', '', text)
+        return text.strip()
 
     async def _fetch_tweets_only(self, interests_str: str) -> list[ContentItem]:
         """Fetch only tweets when the main request didn't return any."""
