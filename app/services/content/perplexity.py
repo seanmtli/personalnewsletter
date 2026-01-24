@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from openai import OpenAI
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
@@ -7,10 +7,16 @@ from app.config import get_settings
 
 settings = get_settings()
 
+# Maximum age for content (in days)
+MAX_CONTENT_AGE_DAYS = 10
+
 CURATOR_PROMPT = """You are a sports news curator. The user follows these teams/players:
 {interests}
 
-Find the most important and interesting sports news from the past week related to these interests.
+Today's date is {today_date}.
+
+Find the most important and interesting sports news from the PAST 10 DAYS ONLY related to these interests.
+Do NOT include any content older than 10 days.
 Look for content from news articles, social media, YouTube, and Reddit.
 
 Select the TOP 5-7 stories and return them as a JSON array. Each item should have:
@@ -20,7 +26,7 @@ Select the TOP 5-7 stories and return them as a JSON array. Each item should hav
 - source_name: The publication or account name
 - url: Direct link to the content
 - relevance: One sentence on why this matters to this fan
-- published_at: ISO datetime if known, null if unknown
+- published_at: ISO datetime (MUST be within the last 10 days)
 - thumbnail_url: Image URL if available, null otherwise
 
 Return ONLY valid JSON as an array. No other text or explanation."""
@@ -44,7 +50,8 @@ class PerplexityProvider(ContentProvider):
             raise ValueError("Perplexity API key not configured")
 
         interests_str = ", ".join(interests)
-        prompt = CURATOR_PROMPT.format(interests=interests_str)
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        prompt = CURATOR_PROMPT.format(interests=interests_str, today_date=today_date)
 
         try:
             response = self.client.chat.completions.create(
@@ -52,7 +59,7 @@ class PerplexityProvider(ContentProvider):
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a sports news curator. Return only valid JSON.",
+                        "content": "You are a sports news curator. Return only valid JSON. Only include content from the past 10 days.",
                     },
                     {
                         "role": "user",
@@ -83,6 +90,9 @@ class PerplexityProvider(ContentProvider):
             data = json.loads(text)
 
             items = []
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=MAX_CONTENT_AGE_DAYS)
+            print(f"[Perplexity] Parsing {len(data)} items (cutoff: {cutoff_date.date()})")
+
             for item_data in data:
                 published_at = None
                 if item_data.get("published_at"):
@@ -90,8 +100,16 @@ class PerplexityProvider(ContentProvider):
                         published_at = datetime.fromisoformat(
                             item_data["published_at"].replace("Z", "+00:00")
                         )
+                        # Make timezone-aware if not already
+                        if published_at.tzinfo is None:
+                            published_at = published_at.replace(tzinfo=timezone.utc)
                     except (ValueError, TypeError):
                         pass
+
+                # Filter out content older than MAX_CONTENT_AGE_DAYS
+                if published_at and published_at < cutoff_date:
+                    print(f"  Skipping: too old ({published_at.date()})")
+                    continue
 
                 item = ContentItem(
                     headline=item_data.get("headline", ""),
@@ -105,6 +123,7 @@ class PerplexityProvider(ContentProvider):
                 )
                 items.append(item)
 
+            print(f"[Perplexity] Kept {len(items)} items after date filtering")
             return items
 
         except json.JSONDecodeError as e:

@@ -1,8 +1,11 @@
 import feedparser
 import httpx
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
+
+# Maximum age for content (in days)
+MAX_CONTENT_AGE_DAYS = 10
 
 # RSS feed sources for different sports
 RSS_FEEDS = {
@@ -95,13 +98,25 @@ class RSSProvider(ContentProvider):
             feed = feedparser.parse(response.text)
 
         items = []
-
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=MAX_CONTENT_AGE_DAYS)
         interests_lower = [i.lower() for i in interests]
 
         for entry in feed.entries[:20]:  # Check top 20 entries
             title = entry.get("title", "")
             summary = entry.get("summary", entry.get("description", ""))
             link = entry.get("link", "")
+
+            # Parse published date first (for filtering)
+            published_at = None
+            if entry.get("published_parsed"):
+                try:
+                    published_at = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                except (ValueError, TypeError):
+                    pass
+
+            # Filter out content older than MAX_CONTENT_AGE_DAYS
+            if published_at and published_at < cutoff_date:
+                continue
 
             # Check if entry matches any interest
             # Match on individual words from interests (e.g., "Dallas Cowboys" matches "Cowboys")
@@ -121,14 +136,6 @@ class RSSProvider(ContentProvider):
                                 break
 
             if matching_interests:
-                # Parse published date
-                published_at = None
-                if entry.get("published_parsed"):
-                    try:
-                        published_at = datetime(*entry.published_parsed[:6])
-                    except (ValueError, TypeError):
-                        pass
-
                 # Get thumbnail if available
                 thumbnail_url = None
                 if entry.get("media_thumbnail"):

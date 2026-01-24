@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from anthropic import Anthropic
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
@@ -8,11 +8,16 @@ from app.services.screenshot import ScreenshotService
 
 settings = get_settings()
 
+# Maximum age for content (in days)
+MAX_CONTENT_AGE_DAYS = 10
+
 CURATOR_PROMPT = """You are a sports news curator. The user follows these teams/players:
 {interests}
 
-Search the web for the most important and interesting sports news from the past week
-related to these interests.
+Today's date is {today_date}.
+
+Search the web for the most important and interesting sports news from the PAST 10 DAYS ONLY
+related to these interests. Do NOT include any content older than 10 days.
 
 **CRITICAL REQUIREMENT - TWEETS:**
 Your response MUST include AT LEAST 2 tweets. The FIRST item in your array MUST be a tweet.
@@ -94,7 +99,8 @@ class ClaudeProvider(ContentProvider):
             raise ValueError("Anthropic API key not configured")
 
         interests_str = ", ".join(interests)
-        prompt = CURATOR_PROMPT.format(interests=interests_str)
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        prompt = CURATOR_PROMPT.format(interests=interests_str, today_date=today_date)
 
         try:
             # Use Claude with web search tool
@@ -180,7 +186,9 @@ class ClaudeProvider(ContentProvider):
             screenshot_service = ScreenshotService()
 
             items = []
-            print(f"Parsing {len(data)} items from Claude response")
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=MAX_CONTENT_AGE_DAYS)
+            print(f"Parsing {len(data)} items from Claude response (cutoff: {cutoff_date.date()})")
+
             for idx, item_data in enumerate(data):
                 print(f"  Item {idx}: source_type={item_data.get('source_type')}, url={item_data.get('url', '')[:60]}...")
                 # Parse published_at if present
@@ -190,8 +198,16 @@ class ClaudeProvider(ContentProvider):
                         published_at = datetime.fromisoformat(
                             item_data["published_at"].replace("Z", "+00:00")
                         )
+                        # Make timezone-aware if not already
+                        if published_at.tzinfo is None:
+                            published_at = published_at.replace(tzinfo=timezone.utc)
                     except (ValueError, TypeError):
                         pass
+
+                # Filter out content older than MAX_CONTENT_AGE_DAYS
+                if published_at and published_at < cutoff_date:
+                    print(f"    Skipping: too old ({published_at.date()})")
+                    continue
 
                 # Extract tweet metadata from URL if it's a tweet
                 url = item_data.get("url", "")
@@ -218,6 +234,7 @@ class ClaudeProvider(ContentProvider):
                 )
                 items.append(item)
 
+            print(f"  Kept {len(items)} items after date filtering")
             return items
 
         except json.JSONDecodeError as e:
@@ -227,7 +244,10 @@ class ClaudeProvider(ContentProvider):
 
     async def _fetch_tweets_only(self, interests_str: str) -> list[ContentItem]:
         """Fetch only tweets when the main request didn't return any."""
+        today_date = datetime.now().strftime("%Y-%m-%d")
         tweet_prompt = f"""Find 2-3 recent tweets from Twitter/X about: {interests_str}
+
+Today's date is {today_date}. Only include tweets from the PAST 10 DAYS.
 
 Search specifically on x.com and twitter.com for tweets from:
 - Team official accounts
@@ -245,7 +265,7 @@ Return ONLY a JSON array with tweet objects. Each must have:
 - url: The x.com or twitter.com URL with /status/
 - author_handle: The @username
 - relevance: Why this matters
-- published_at: null
+- published_at: ISO datetime (MUST be within last 10 days)
 - thumbnail_url: null
 
 Return ONLY valid JSON array. No markdown, no explanation."""
