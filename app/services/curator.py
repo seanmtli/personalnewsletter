@@ -2,7 +2,6 @@ import traceback
 from datetime import datetime
 from app.schemas import CuratedNewsletter, ContentItem, ProviderDebugResult
 from app.services.content.claude import ClaudeProvider
-from app.services.content.perplexity import PerplexityProvider
 from app.services.content.rss import RSSProvider
 from app.config import get_settings
 
@@ -14,9 +13,8 @@ MIN_ITEMS_THRESHOLD = 3  # Minimum items before falling back to next provider
 class ContentCurator:
     """
     Orchestrates content providers with fallback logic:
-    1. Try Claude with web search
-    2. Fall back to Perplexity if Claude fails or returns < 3 items
-    3. Fall back to RSS if both fail
+    1. Try Claude with web search (Opus for search, Sonnet for verification)
+    2. Fall back to RSS if Claude fails or returns < 3 items
     """
 
     def __init__(self):
@@ -25,8 +23,6 @@ class ContentCurator:
         # Add providers in priority order
         if settings.anthropic_api_key:
             self.providers.append(ClaudeProvider())
-        if settings.perplexity_api_key:
-            self.providers.append(PerplexityProvider())
         # RSS is always available as fallback
         self.providers.append(RSSProvider())
 
@@ -90,14 +86,13 @@ class ContentCurator:
 
         Args:
             interests: List of interests
-            provider_name: "claude", "perplexity", or "rss"
+            provider_name: "claude" or "rss"
 
         Returns:
             CuratedNewsletter from the specified provider
         """
         provider_map = {
             "claude": ClaudeProvider,
-            "perplexity": PerplexityProvider,
             "rss": RSSProvider,
         }
 
@@ -128,7 +123,6 @@ class ContentCurator:
 
         provider_configs = [
             ("claude", ClaudeProvider, bool(settings.anthropic_api_key)),
-            ("perplexity", PerplexityProvider, bool(settings.perplexity_api_key)),
             ("rss", RSSProvider, True),  # RSS is always available
         ]
 
@@ -178,7 +172,5 @@ class ContentCurator:
         providers = []
         if settings.anthropic_api_key:
             providers.append("claude")
-        if settings.perplexity_api_key:
-            providers.append("perplexity")
         providers.append("rss")  # Always available
         return providers
