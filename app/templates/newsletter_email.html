@@ -4,82 +4,128 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ newsletter_name }}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+    </style>
+    <![endif]-->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Reset and base */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            max-width: 600px;
+            color: #1f2937;
+            max-width: 640px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 24px 16px;
+            background-color: #f9fafb;
+            -webkit-font-smoothing: antialiased;
         }
+
         .container {
             background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
+
+        /* Header with orange accent */
         .header {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #4f46e5;
+            padding: 32px 24px;
+            border-bottom: 3px solid #f97316;
         }
         .header h1 {
-            color: #4f46e5;
+            color: #1f2937;
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header h1 span {
+            color: #f97316;
         }
         .header p {
-            color: #666;
-            margin: 10px 0 0;
+            color: #6b7280;
+            margin: 12px 0 0;
             font-size: 14px;
+            font-weight: 500;
         }
+
+        /* Content area */
+        .content {
+            padding: 24px;
+        }
+
+        /* Story card styles */
         .story {
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+            padding: 20px;
+            background-color: #fafafa;
+            border-radius: 12px;
+            border-left: 4px solid #f97316;
+            transition: all 0.2s ease;
         }
         .story:last-child {
-            border-bottom: none;
             margin-bottom: 0;
-            padding-bottom: 0;
         }
         .story-header {
             display: flex;
-            gap: 15px;
+            gap: 16px;
             align-items: flex-start;
         }
+
+        /* Larger thumbnails with fallback */
         .story-thumbnail {
-            width: 80px;
-            height: 80px;
-            border-radius: 4px;
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
             object-fit: cover;
             flex-shrink: 0;
+            background-color: #e5e7eb;
+            border: 1px solid #e5e7eb;
         }
+        .thumbnail-placeholder {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
         .story-content {
             flex: 1;
+            min-width: 0;
         }
         .story h2 {
-            margin: 0 0 10px;
-            font-size: 18px;
+            margin: 0 0 8px;
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 1.4;
         }
         .story h2 a {
-            color: #1a1a1a;
+            color: #1f2937;
             text-decoration: none;
         }
         .story h2 a:hover {
-            color: #4f46e5;
+            color: #f97316;
         }
         .story p {
             margin: 0 0 10px;
-            color: #555;
+            color: #4b5563;
             font-size: 14px;
+            line-height: 1.6;
         }
         .story-meta {
             font-size: 12px;
-            color: #888;
+            color: #9ca3af;
+            font-weight: 500;
         }
         .story-meta .source {
             display: inline-flex;
@@ -88,88 +134,93 @@
         }
         .relevance {
             font-size: 13px;
-            color: #4f46e5;
-            margin-top: 8px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            font-size: 12px;
-            color: #888;
-        }
-        .footer a {
-            color: #4f46e5;
-            text-decoration: none;
+            color: #ea580c;
+            margin-top: 10px;
+            font-weight: 500;
         }
         .source-icon {
             display: inline;
         }
+
         /* Tweet embed styles */
         .tweet-embed {
-            margin: 20px 0;
+            margin: 16px 0;
             text-align: center;
         }
         .tweet-embed img {
             max-width: 100%;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
+
         /* Tweet card fallback styles */
         .tweet-card {
-            border: 1px solid #e1e8ed;
-            border-radius: 12px;
-            padding: 16px;
-            max-width: 520px;
-            margin: 20px auto;
-            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 16px 20px;
+            max-width: 100%;
+            margin: 16px 0;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         .tweet-card-header {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .tweet-card-author {
-            font-weight: bold;
-            color: #14171a;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 15px;
         }
         .tweet-card-handle {
-            color: #657786;
-            margin-left: 4px;
+            color: #9ca3af;
+            font-size: 14px;
         }
         .tweet-card-text {
             font-size: 15px;
-            line-height: 1.4;
+            line-height: 1.5;
             margin: 0 0 12px;
-            color: #14171a;
+            color: #374151;
         }
         .tweet-card-link {
-            color: #1da1f2;
+            color: #f97316;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 500;
         }
+        .tweet-card-link:hover {
+            color: #ea580c;
+        }
+
         /* Reddit embed styles */
         .reddit-embed {
-            margin: 20px 0;
+            margin: 16px 0;
             text-align: center;
         }
         .reddit-embed img {
             max-width: 100%;
-            border-radius: 8px;
-            border: 1px solid #e1e8ed;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
+
         /* Reddit card fallback styles */
         .reddit-card {
-            border: 1px solid #e1e8ed;
-            border-radius: 8px;
-            padding: 16px;
-            max-width: 520px;
-            margin: 20px auto;
-            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px 20px;
+            max-width: 100%;
+            margin: 16px 0;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         .reddit-card-header {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .reddit-icon {
             width: 20px;
@@ -177,19 +228,86 @@
             margin-right: 8px;
         }
         .reddit-card-subreddit {
-            color: #1a1a1b;
-            font-weight: 500;
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 14px;
         }
         .reddit-card-text {
             font-size: 15px;
-            line-height: 1.4;
+            line-height: 1.5;
             margin: 0 0 12px;
-            color: #1a1a1b;
+            color: #374151;
         }
         .reddit-card-link {
-            color: #ff4500;
+            color: #f97316;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 500;
+        }
+        .reddit-card-link:hover {
+            color: #ea580c;
+        }
+
+        /* Divider between stories */
+        .story-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent);
+            margin: 24px 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            margin: 0 0 12px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+        .footer p:last-child {
+            margin-bottom: 0;
+        }
+        .footer a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer a:hover {
+            color: #ea580c;
+            text-decoration: underline;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            .header {
+                padding: 24px 16px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .content {
+                padding: 16px;
+            }
+            .story {
+                padding: 16px;
+            }
+            .story-header {
+                flex-direction: column;
+            }
+            .story-thumbnail,
+            .thumbnail-placeholder {
+                width: 100%;
+                height: 160px;
+            }
+            .story h2 {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -197,9 +315,10 @@
     <div class="container">
         <div class="header">
             <h1>{{ newsletter_name }}</h1>
-            <p>Your weekly sports digest - {{ generated_at.strftime('%B %d, %Y') }}</p>
+            <p>Your weekly sports digest &bull; {{ generated_at.strftime('%B %d, %Y') }}</p>
         </div>
 
+        <div class="content">
         {% for item in items %}
         {% if item.source_type == 'tweet' and item.screenshot_url %}
         <!-- Tweet Screenshot Embed -->
@@ -211,12 +330,12 @@
                 <a href="{{ item.url }}" target="_blank" style="text-decoration: none;">
                     <img src="{{ item.screenshot_url }}"
                          alt="Tweet from {{ item.author_handle or item.source_name }}"
-                         width="520">
+                         style="max-width: 100%; border-radius: 16px; border: 1px solid #e5e7eb;">
                 </a>
             </div>
             <div class="story-meta">
                 <span class="source">
-                    <span class="source-icon">🐦</span>
+                    <span class="source-icon">&#120143;</span>
                     {{ item.source_name }}{% if item.author_handle %} ({{ item.author_handle }}){% endif %}
                 </span>
                 {% if item.published_at %}
@@ -242,7 +361,7 @@
                     {% endif %}
                 </div>
                 <p class="tweet-card-text">{{ item.summary }}</p>
-                <a href="{{ item.url }}" class="tweet-card-link" target="_blank">View on X →</a>
+                <a href="{{ item.url }}" class="tweet-card-link" target="_blank">View on X &rarr;</a>
             </div>
             <div class="story-meta">
                 {% if item.published_at %}
@@ -264,12 +383,12 @@
                 <a href="{{ item.url }}" target="_blank" style="text-decoration: none;">
                     <img src="{{ item.screenshot_url }}"
                          alt="Reddit post from {{ item.source_name }}"
-                         width="520">
+                         style="max-width: 100%; border-radius: 12px; border: 1px solid #e5e7eb;">
                 </a>
             </div>
             <div class="story-meta">
                 <span class="source">
-                    <span class="source-icon">💬</span>
+                    <span class="source-icon">&#128172;</span>
                     {{ item.source_name }}
                 </span>
                 {% if item.published_at %}
@@ -292,7 +411,7 @@
                     <span class="reddit-card-subreddit">r/{{ item.source_name }}</span>
                 </div>
                 <p class="reddit-card-text">{{ item.summary }}</p>
-                <a href="{{ item.url }}" class="reddit-card-link" target="_blank">View on Reddit →</a>
+                <a href="{{ item.url }}" class="reddit-card-link" target="_blank">View on Reddit &rarr;</a>
             </div>
             <div class="story-meta">
                 {% if item.published_at %}
@@ -309,19 +428,23 @@
         <div class="story">
             <div class="story-header">
                 {% if item.thumbnail_url %}
-                <img src="{{ item.thumbnail_url }}" alt="" class="story-thumbnail">
+                <img src="{{ item.thumbnail_url }}" alt="" class="story-thumbnail" style="width: 120px; height: 90px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background-color: #e5e7eb; border: 1px solid #e5e7eb;">
+                {% else %}
+                <div class="thumbnail-placeholder" style="width: 120px; height: 90px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                    {% if item.source_type == 'article' %}&#128240;{% elif item.source_type == 'video' %}&#127916;{% else %}&#128240;{% endif %}
+                </div>
                 {% endif %}
                 <div class="story-content">
                     <h2>
-                        <a href="{{ item.url }}">{{ item.headline }}</a>
+                        <a href="{{ item.url }}" style="color: #1f2937; text-decoration: none;">{{ item.headline }}</a>
                     </h2>
-                    <p>{{ item.summary }}</p>
-                    <div class="story-meta">
+                    <p style="margin: 0 0 10px; color: #4b5563; font-size: 14px; line-height: 1.6;">{{ item.summary }}</p>
+                    <div class="story-meta" style="font-size: 12px; color: #9ca3af; font-weight: 500;">
                         <span class="source">
                             <span class="source-icon">
-                                {% if item.source_type == 'article' %}📰
-                                {% elif item.source_type == 'video' %}🎬
-                                {% else %}📰
+                                {% if item.source_type == 'article' %}&#128240;
+                                {% elif item.source_type == 'video' %}&#127916;
+                                {% else %}&#128240;
                                 {% endif %}
                             </span>
                             {{ item.source_name }}
@@ -331,21 +454,26 @@
                         {% endif %}
                     </div>
                     {% if item.relevance %}
-                    <p class="relevance">{{ item.relevance }}</p>
+                    <p class="relevance" style="font-size: 13px; color: #ea580c; margin-top: 10px; font-weight: 500;">{{ item.relevance }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
         {% endif %}
+
+        {% if not loop.last %}
+        <div class="story-divider" style="height: 1px; background: linear-gradient(90deg, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent); margin: 24px 0;"></div>
+        {% endif %}
         {% endfor %}
+        </div>
 
         <div class="footer">
             <p>
                 You're receiving this because you subscribed to {{ newsletter_name }}.
             </p>
             <p>
-                <a href="{{ site_url }}/preferences">Update preferences</a> &bull;
-                <a href="{{ site_url }}/newsletter/archive">View archive</a>
+                <a href="{{ site_url }}/preferences" style="color: #f97316; text-decoration: none; font-weight: 500;">Update preferences</a> &bull;
+                <a href="{{ site_url }}/newsletter/archive" style="color: #f97316; text-decoration: none; font-weight: 500;">View archive</a>
             </p>
         </div>
     </div>
