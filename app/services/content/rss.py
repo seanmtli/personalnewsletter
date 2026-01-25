@@ -149,7 +149,7 @@ class RSSProvider(ContentProvider):
                     source_type="article",
                     source_name="ESPN",
                     url=link,
-                    relevance=f"Matches your interest in {', '.join(matching_interests)}",
+                    relevance="",
                     published_at=published_at,
                     thumbnail_url=thumbnail_url,
                 )
