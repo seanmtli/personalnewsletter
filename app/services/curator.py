@@ -4,10 +4,9 @@ from app.schemas import CuratedNewsletter, ContentItem, ProviderDebugResult
 from app.services.content.claude import ClaudeProvider
 from app.services.content.rss import RSSProvider
 from app.config import get_settings
+from app.constants import MIN_ITEMS_THRESHOLD
 
 settings = get_settings()
-
-MIN_ITEMS_THRESHOLD = 3  # Minimum items before falling back to next provider
 
 
 class ContentCurator:

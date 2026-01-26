@@ -3,9 +3,7 @@ import httpx
 from datetime import datetime, timedelta, timezone
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
-
-# Maximum age for content (in days)
-MAX_CONTENT_AGE_DAYS = 10
+from app.constants import MAX_CONTENT_AGE_DAYS
 
 # RSS feed sources for different sports
 RSS_FEEDS = {

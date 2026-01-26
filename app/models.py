@@ -44,7 +44,7 @@ class Newsletter(Base):
     content: Mapped[str] = mapped_column(Text)  # HTML content
     content_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # Structured content
     interests_used: Mapped[list | None] = mapped_column(JSON, nullable=True)
-    provider_used: Mapped[str] = mapped_column(String(50))  # "claude", "perplexity", "rss"
+    provider_used: Mapped[str] = mapped_column(String(50))  # "claude" or "rss"
     sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

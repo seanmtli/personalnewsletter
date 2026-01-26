@@ -56,7 +56,6 @@ async def test_curator_with_mock_claude(sample_content_items):
         # Temporarily set API key
         with patch("app.services.curator.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
-            mock_settings.perplexity_api_key = ""
 
             curator = ContentCurator()
             curator.providers = [mock_instance]
@@ -98,7 +97,6 @@ async def test_curator_fallback():
 
         with patch("app.services.curator.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
-            mock_settings.perplexity_api_key = ""
 
             curator = ContentCurator()
             curator.providers = [mock_claude, mock_rss]

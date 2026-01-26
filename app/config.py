@@ -13,7 +13,6 @@ class Settings(BaseSettings):
 
     # AI Providers
     anthropic_api_key: str = ""
-    perplexity_api_key: str = ""
 
     # Screenshot service (TwitterShots)
     twittershots_api_key: str = ""
@@ -35,6 +34,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore extra fields in .env
 
 
 @lru_cache

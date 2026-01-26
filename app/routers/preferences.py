@@ -1,5 +1,3 @@
-import json
-from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -10,25 +8,10 @@ from app.database import get_db
 from app.models import User, Preference
 from app.schemas import PreferenceCreate, PreferenceResponse, PreferenceBulkUpdate
 from app.routers.auth import get_current_user
+from app.utils.data import load_teams_data, load_athletes_data
 
 router = APIRouter(prefix="/preferences", tags=["preferences"])
 templates = Jinja2Templates(directory="app/templates")
-
-
-def load_teams_data() -> dict:
-    teams_path = Path("data/teams.json")
-    if teams_path.exists():
-        with open(teams_path) as f:
-            return json.load(f)
-    return {}
-
-
-def load_athletes_data() -> dict:
-    athletes_path = Path("data/athletes.json")
-    if athletes_path.exists():
-        with open(athletes_path) as f:
-            return json.load(f)
-    return {}
 
 
 @router.get("", response_class=HTMLResponse)

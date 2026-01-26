@@ -1,20 +1,16 @@
+"""Claude content provider with two-stage search and verification."""
 import json
-import re
 from datetime import datetime, timedelta, timezone
 from anthropic import Anthropic
+
 from app.services.content.base import ContentProvider
 from app.schemas import ContentItem
 from app.config import get_settings
 from app.services.screenshot import ScreenshotService
+from app.constants import MAX_CONTENT_AGE_DAYS, CLAUDE_SEARCH_MODEL, CLAUDE_VERIFY_MODEL
+from app.utils.parsing import extract_json_from_text, parse_datetime, strip_citations
 
 settings = get_settings()
-
-# Maximum age for content (in days)
-MAX_CONTENT_AGE_DAYS = 10
-
-# Models - using Claude 3.5 Haiku for cost efficiency
-SEARCH_MODEL = "claude-3-5-haiku-20241022"  # Cheapest model with web search
-VERIFY_MODEL = "claude-3-5-haiku-20241022"  # Cheapest model for verification
 
 SEARCH_PROMPT = """You are a sports news curator. Find 7-10 recent news items for someone who follows:
 {interests}
@@ -87,6 +83,7 @@ class ClaudeProvider(ContentProvider):
 
     def __init__(self):
         self.client = Anthropic(api_key=settings.anthropic_api_key)
+        self.screenshot_service = ScreenshotService()
 
     @property
     def name(self) -> str:
@@ -97,7 +94,7 @@ class ClaudeProvider(ContentProvider):
         if not settings.anthropic_api_key:
             raise ValueError("Anthropic API key not configured")
 
-        # Stage 1: Search for content using Opus
+        # Stage 1: Search for content
         raw_items = await self._search_for_content(interests)
 
         if not raw_items:
@@ -106,7 +103,7 @@ class ClaudeProvider(ContentProvider):
 
         print(f"[CLAUDE] Search stage found {len(raw_items)} items")
 
-        # Stage 2: Verify relevance using Sonnet
+        # Stage 2: Verify relevance
         verified_items = await self._verify_relevance(raw_items, interests)
 
         # If verification filtered too aggressively, log warning
@@ -119,15 +116,15 @@ class ClaudeProvider(ContentProvider):
         return verified_items
 
     async def _search_for_content(self, interests: list[str]) -> list[ContentItem]:
-        """Stage 1: Search for content using Opus with web search."""
+        """Stage 1: Search for content with web search."""
         interests_str = ", ".join(interests)
         today_date = datetime.now().strftime("%Y-%m-%d")
         prompt = SEARCH_PROMPT.format(interests=interests_str, date=today_date)
 
         try:
-            print(f"[CLAUDE] Searching with {SEARCH_MODEL}...")
+            print(f"[CLAUDE] Searching with {CLAUDE_SEARCH_MODEL}...")
             response = self.client.messages.create(
-                model=SEARCH_MODEL,
+                model=CLAUDE_SEARCH_MODEL,
                 max_tokens=4096,
                 tools=[
                     {
@@ -136,28 +133,17 @@ class ClaudeProvider(ContentProvider):
                         "max_uses": 10,
                     }
                 ],
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
+                messages=[{"role": "user", "content": prompt}],
             )
 
             # Extract text content from response
-            result_text = ""
-            for block in response.content:
-                if hasattr(block, "text"):
-                    result_text = block.text
-                    break
-
+            result_text = self._extract_text_from_response(response)
             print(f"[CLAUDE] Search response length: {len(result_text)} chars")
-            print(f"[CLAUDE] Search response preview: {result_text[:500]}...")
 
             # Parse JSON response
-            items = self._parse_response(result_text)
+            items = self._parse_search_response(result_text)
 
-            # Debug: log what types we got
+            # Log item types
             type_counts = {}
             for item in items:
                 type_counts[item.source_type] = type_counts.get(item.source_type, 0) + 1
@@ -170,16 +156,15 @@ class ClaudeProvider(ContentProvider):
             raise
 
     async def _verify_relevance(self, items: list[ContentItem], interests: list[str]) -> list[ContentItem]:
-        """Stage 2: Verify relevance of items using Sonnet."""
+        """Stage 2: Verify relevance of items."""
         if not items:
             return []
 
         interests_str = ", ".join(interests)
 
         # Convert items to JSON for verification
-        items_data = []
-        for item in items:
-            items_data.append({
+        items_data = [
+            {
                 "headline": item.headline,
                 "summary": item.summary,
                 "source_type": item.source_type,
@@ -189,33 +174,22 @@ class ClaudeProvider(ContentProvider):
                 "published_at": item.published_at.isoformat() if item.published_at else None,
                 "thumbnail_url": item.thumbnail_url,
                 "author_handle": item.author_handle,
-            })
+            }
+            for item in items
+        ]
 
         items_json = json.dumps(items_data, indent=2)
         prompt = VERIFY_PROMPT.format(interests=interests_str, items_json=items_json)
 
         try:
-            print(f"[CLAUDE] Verifying {len(items)} items with {VERIFY_MODEL}...")
+            print(f"[CLAUDE] Verifying {len(items)} items with {CLAUDE_VERIFY_MODEL}...")
             response = self.client.messages.create(
-                model=VERIFY_MODEL,
+                model=CLAUDE_VERIFY_MODEL,
                 max_tokens=4096,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
+                messages=[{"role": "user", "content": prompt}],
             )
 
-            # Extract text content from response
-            result_text = ""
-            for block in response.content:
-                if hasattr(block, "text"):
-                    result_text = block.text
-                    break
-
-            # Parse verification response
-            print(f"[CLAUDE] Verification response preview: {result_text[:500]}...")
+            result_text = self._extract_text_from_response(response)
             verified_data = self._parse_verification_response(result_text)
 
             if verified_data.get("quality_warning"):
@@ -226,146 +200,53 @@ class ClaudeProvider(ContentProvider):
                 print(f"[CLAUDE] Verification rejected {rejected_count} items")
 
             # Convert verified items back to ContentItem objects
-            verified_items = []
-            screenshot_service = ScreenshotService()
-
-            for item_data in verified_data.get("verified_items", []):
-                # Parse published_at if present
-                published_at = None
-                if item_data.get("published_at"):
-                    try:
-                        published_at = datetime.fromisoformat(
-                            item_data["published_at"].replace("Z", "+00:00")
-                        )
-                        if published_at.tzinfo is None:
-                            published_at = published_at.replace(tzinfo=timezone.utc)
-                    except (ValueError, TypeError):
-                        pass
-
-                # Extract tweet metadata
-                url = item_data.get("url", "")
-                tweet_id = None
-                author_handle = item_data.get("author_handle")
-
-                if item_data.get("source_type") == "tweet" and url:
-                    tweet_id = screenshot_service.extract_tweet_id(url)
-                    if not author_handle:
-                        author_handle = screenshot_service.extract_author_handle(url)
-
-                item = ContentItem(
-                    headline=self._strip_citations(item_data.get("headline", "")),
-                    summary=self._strip_citations(item_data.get("summary", "")),
-                    source_type=item_data.get("source_type", "article"),
-                    source_name=item_data.get("source_name", "Unknown"),
-                    url=url,
-                    relevance=self._strip_citations(item_data.get("relevance", "")),
-                    published_at=published_at,
-                    thumbnail_url=item_data.get("thumbnail_url"),
-                    tweet_id=tweet_id,
-                    author_handle=author_handle,
-                )
-                verified_items.append(item)
+            verified_items = [
+                self._create_content_item(item_data)
+                for item_data in verified_data.get("verified_items", [])
+            ]
 
             print(f"[CLAUDE] Verification passed {len(verified_items)} items")
             return verified_items
 
         except Exception as e:
             print(f"[CLAUDE] Verification error: {e}, returning unverified items")
-            # On verification failure, return original items
             return items
+
+    def _extract_text_from_response(self, response) -> str:
+        """Extract text content from Claude API response."""
+        for block in response.content:
+            if hasattr(block, "text"):
+                return block.text
+        return ""
 
     def _parse_verification_response(self, response_text: str) -> dict:
         """Parse the verification agent's JSON response."""
         try:
-            text = response_text.strip()
-
-            # Handle markdown code blocks
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0]
-            elif "```" in text:
-                text = text.split("```")[1].split("```")[0]
-            else:
-                # Find JSON object
-                start_idx = text.find("{")
-                end_idx = text.rfind("}")
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    text = text[start_idx:end_idx + 1]
-
+            text = extract_json_from_text(response_text, expect_array=False)
             return json.loads(text)
-
         except json.JSONDecodeError as e:
             print(f"[CLAUDE] Failed to parse verification response: {e}")
             return {"verified_items": [], "rejected_count": 0}
 
-    def _parse_response(self, response_text: str) -> list[ContentItem]:
+    def _parse_search_response(self, response_text: str) -> list[ContentItem]:
         """Parse Claude's JSON response into ContentItem objects."""
         try:
-            # Try to extract JSON from the response
-            text = response_text.strip()
-
-            # Handle case where response might have markdown code blocks
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0]
-            elif "```" in text:
-                text = text.split("```")[1].split("```")[0]
-            else:
-                # Try to find JSON array in the text (Claude may include explanatory text)
-                # Look for the first [ and last ] to extract the array
-                start_idx = text.find("[")
-                end_idx = text.rfind("]")
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    text = text[start_idx : end_idx + 1]
-
+            text = extract_json_from_text(response_text, expect_array=True)
             data = json.loads(text)
-            screenshot_service = ScreenshotService()
 
-            items = []
             cutoff_date = datetime.now(timezone.utc) - timedelta(days=MAX_CONTENT_AGE_DAYS)
             print(f"[CLAUDE] Parsing {len(data)} items (cutoff: {cutoff_date.date()})")
 
+            items = []
             for idx, item_data in enumerate(data):
-                # Parse published_at if present
-                published_at = None
-                if item_data.get("published_at"):
-                    try:
-                        published_at = datetime.fromisoformat(
-                            item_data["published_at"].replace("Z", "+00:00")
-                        )
-                        # Make timezone-aware if not already
-                        if published_at.tzinfo is None:
-                            published_at = published_at.replace(tzinfo=timezone.utc)
-                    except (ValueError, TypeError):
-                        pass
+                published_at = parse_datetime(item_data.get("published_at"))
 
                 # Filter out content older than MAX_CONTENT_AGE_DAYS
                 if published_at and published_at < cutoff_date:
                     print(f"[CLAUDE]   Item {idx}: Skipping (too old: {published_at.date()})")
                     continue
 
-                # Extract tweet metadata from URL if it's a tweet
-                url = item_data.get("url", "")
-                tweet_id = None
-                author_handle = item_data.get("author_handle")
-
-                if item_data.get("source_type") == "tweet" and url:
-                    tweet_id = screenshot_service.extract_tweet_id(url)
-                    # Use extracted handle as fallback if not in response
-                    if not author_handle:
-                        author_handle = screenshot_service.extract_author_handle(url)
-
-                item = ContentItem(
-                    headline=self._strip_citations(item_data.get("headline", "")),
-                    summary=self._strip_citations(item_data.get("summary", "")),
-                    source_type=item_data.get("source_type", "article"),
-                    source_name=item_data.get("source_name", "Unknown"),
-                    url=url,
-                    relevance=self._strip_citations(item_data.get("relevance", "")),
-                    published_at=published_at,
-                    thumbnail_url=item_data.get("thumbnail_url"),
-                    tweet_id=tweet_id,
-                    author_handle=author_handle,
-                )
-                items.append(item)
+                items.append(self._create_content_item(item_data))
 
             print(f"[CLAUDE]   Kept {len(items)} items after date filtering")
             return items
@@ -375,37 +256,43 @@ class ClaudeProvider(ContentProvider):
             print(f"[CLAUDE] Response text: {response_text[:500]}")
             return []
 
-    def _strip_citations(self, text: str) -> str:
-        """Remove Claude web search citation tags from text.
+    def _create_content_item(self, item_data: dict) -> ContentItem:
+        """Create a ContentItem from parsed JSON data."""
+        url = item_data.get("url", "")
+        tweet_id = None
+        author_handle = item_data.get("author_handle")
 
-        Citations look like: <cite index="23-3,23-4,23-5">text</cite>
-        or sometimes just: <cite index="23-3,23-4,23-5">text (unclosed)
-        """
-        if not text:
-            return text
-        # Remove <cite ...>...</cite> tags (closed)
-        text = re.sub(r'<cite[^>]*>([^<]*)</cite>', r'\1', text)
-        # Remove <cite ...> tags (unclosed - just the opening tag)
-        text = re.sub(r'<cite[^>]*>', '', text)
-        # Remove any remaining </cite> closing tags
-        text = re.sub(r'</cite>', '', text)
-        return text.strip()
+        if item_data.get("source_type") == "tweet" and url:
+            tweet_id = self.screenshot_service.extract_tweet_id(url)
+            if not author_handle:
+                author_handle = self.screenshot_service.extract_author_handle(url)
+
+        return ContentItem(
+            headline=strip_citations(item_data.get("headline", "")),
+            summary=strip_citations(item_data.get("summary", "")),
+            source_type=item_data.get("source_type", "article"),
+            source_name=item_data.get("source_name", "Unknown"),
+            url=url,
+            relevance=strip_citations(item_data.get("relevance", "")),
+            published_at=parse_datetime(item_data.get("published_at")),
+            thumbnail_url=item_data.get("thumbnail_url"),
+            tweet_id=tweet_id,
+            author_handle=author_handle,
+        )
 
     async def _generate_screenshots(self, items: list[ContentItem]) -> list[ContentItem]:
         """Generate screenshots for tweets and reddit posts."""
-        screenshot_service = ScreenshotService()
-
         for item in items:
             if item.source_type == "tweet" and item.url:
                 print(f"[CLAUDE] Generating screenshot for tweet: {item.url}")
-                screenshot_url = await screenshot_service.get_tweet_screenshot(item.url)
+                screenshot_url = await self.screenshot_service.get_tweet_screenshot(item.url)
                 if screenshot_url:
                     item.screenshot_url = screenshot_url
                     print(f"[CLAUDE]   Screenshot generated: {screenshot_url[:80]}...")
                 else:
                     print(f"[CLAUDE]   No screenshot returned (check API key)")
             elif item.source_type == "reddit" and item.url:
-                screenshot_url = await screenshot_service.get_reddit_screenshot(item.url)
+                screenshot_url = await self.screenshot_service.get_reddit_screenshot(item.url)
                 if screenshot_url:
                     item.screenshot_url = screenshot_url
 
