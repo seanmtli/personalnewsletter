@@ -82,6 +82,7 @@ personalnewsletter/
 ├── app/
 │   ├── main.py              # FastAPI entry point
 │   ├── config.py            # Settings management
+│   ├── constants.py         # Shared constants
 │   ├── database.py          # SQLite/SQLAlchemy setup
 │   ├── models.py            # User, Preference, Newsletter models
 │   ├── schemas.py           # Pydantic schemas
@@ -93,10 +94,12 @@ personalnewsletter/
 │   ├── services/
 │   │   ├── content/         # Content providers
 │   │   │   ├── claude.py    # Claude API with web search
-│   │   │   ├── perplexity.py # Perplexity fallback
 │   │   │   └── rss.py       # RSS fallback
 │   │   ├── curator.py       # Provider orchestration
 │   │   └── emailer.py       # Email sending
+│   ├── utils/               # Shared utilities
+│   │   ├── data.py          # Data loading
+│   │   └── parsing.py       # JSON/datetime parsing
 │   ├── static/              # CSS and JS
 │   └── templates/           # Jinja2 HTML templates
 ├── data/
@@ -151,9 +154,10 @@ Set up weekly generation (e.g., Sunday 6 PM):
 
 ## Content Provider Priority
 
-1. **Claude** (primary): Uses web search to find articles, tweets, videos
-2. **Perplexity** (backup): Called if Claude fails or finds <3 items
-3. **RSS** (fallback): ESPN feeds filtered by user interests
+1. **Claude** (primary): Two-stage search with relevance verification
+   - Search: Uses web search to find 7-10 relevant items
+   - Verify: Scores relevance 1-10, filters items scoring <7
+2. **RSS** (fallback): ESPN feeds filtered by user interests
 
 ## License
 

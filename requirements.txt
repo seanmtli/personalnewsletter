@@ -15,7 +15,6 @@ python-multipart>=0.0.6
 
 # AI providers
 anthropic>=0.40.0
-openai>=1.0.0  # For Perplexity API (OpenAI-compatible)
 
 # Email
 resend>=0.7.0
