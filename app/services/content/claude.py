@@ -12,9 +12,9 @@ settings = get_settings()
 # Maximum age for content (in days)
 MAX_CONTENT_AGE_DAYS = 10
 
-# Models
-SEARCH_MODEL = "claude-opus-4-20250514"  # Best reasoning for web search
-VERIFY_MODEL = "claude-sonnet-4-20250514"  # Good judgment, cost-effective
+# Models - using Claude 3.5 Haiku for cost efficiency
+SEARCH_MODEL = "claude-3-5-haiku-20241022"  # Cheapest model with web search
+VERIFY_MODEL = "claude-3-5-haiku-20241022"  # Cheapest model for verification
 
 SEARCH_PROMPT = """You are a sports news curator. Find 7-10 recent news items for someone who follows:
 {interests}
@@ -152,6 +152,7 @@ class ClaudeProvider(ContentProvider):
                     break
 
             print(f"[CLAUDE] Search response length: {len(result_text)} chars")
+            print(f"[CLAUDE] Search response preview: {result_text[:500]}...")
 
             # Parse JSON response
             items = self._parse_response(result_text)
@@ -214,6 +215,7 @@ class ClaudeProvider(ContentProvider):
                     break
 
             # Parse verification response
+            print(f"[CLAUDE] Verification response preview: {result_text[:500]}...")
             verified_data = self._parse_verification_response(result_text)
 
             if verified_data.get("quality_warning"):
